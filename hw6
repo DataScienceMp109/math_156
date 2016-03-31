@@ -1,0 +1,312 @@
+# Assignment name: HW6
+# Student name: Mo Pei
+
+# Question 1
+
+# A gamma distribution with shape parameter ?? = 1 
+# and scale parameter ?? is an exponential (??) distribution.
+# so exponential paramter lambda = 1 and so gamma's rate is 1
+# b.9 b.11, prove that if xi is exp(lambda), sampling distribution of xi 
+# follows so gamma(n*a,n*lambda)
+
+options(scipen=999) #disable scientific notation
+#since Xi~   "Mortal cyberpets life"  ~exp(1)~gamma(1,1)
+#sampling distribution of xi
+curve(dgamma(x,shape = 20,rate=20), xlim = c(0,5),xlab='Mortal cyberpets life')
+
+CI<- qgamma(c(0.025, 0.975),shape = 20,rate=20)
+CI
+# 0.610826 1.483543
+
+abline(v = CI[1], col = "brown")
+abline(v = CI[2], col = "brown")
+
+CI[1] *28;CI[2] *28
+# 17.10313  41.5392
+
+# we are 95% confident that the avarage of Mortal cyberpets life is
+# between 17.10313 days, 41.5392 days.
+
+sample_gamma<-rgamma(20, 1, 1)
+# bootstrap percenttile confidence interval
+N<-10^4; result<- numeric(N)
+for (i in 1:N) {
+  Basic.sample <- sample(sample_gamma,replace=TRUE)
+  result[i]<-mean(Basic.sample)
+}
+hist(result, breaks = "FD", main= "Bootstrap distribution of time difference")
+#Extract a 95% bootstrap percentile confidence interval
+quantile(result, c(.025, .975))
+# 0.7258286 1.3626194 
+# we are 95% confident that the true mean is between 0.7258286 and 1.3626194 
+
+
+# 1000 confidence intervals
+
+#Calculate the amount X.add, add it to the sample mean
+X.add <- 1-qgamma(0.025,shape = 20,rate = 20); X.add   #uses the lower quantile!
+#Calculate an amount X.sub to subtract from the sample mean
+X.sub <- qgamma(0.975,shape = 20,rate = 20)-1; X.sub
+
+counter.low <- 0; counter.high <- 0;
+plot(x =c(0,3), y = c(1,100), type = "n", xlab = "", ylab = "") #blank plot
+for (i in 1:1000) {
+  x <-rgamma(20, 1, 1) #random sample
+  L <- mean(x) - X.sub #usually less than the true mean
+  U <- mean(x) + X.add #usually greater than the true mean
+  if (L < 1 ) counter.low <- counter.low + 1 #count +1 if we were correct
+  if (1 < U) counter.high <- counter.high + 1 #count +1 if we were correct
+  if(i <= 100) {
+    points(L, i, pch= 22)
+    points(U, i, pch= 23)
+    segments(L, i, U, i)
+  }    
+}
+abline (v = 1, col = "red") #vertical line at true mean
+counter.low/1000 ; counter.high/1000   #both should be close to .975
+
+
+# 2. Exercise 12 on page 132
+FishMercury <- read.csv("C:/Users/Mo.Pei/Desktop/156/Data/FishMercury.csv", sep="")
+
+# (1)
+hist(FishMercury$Mercury,probability = FALSE,col='brown')
+
+boxplot(FishMercury$Mercury,ylab = 'Mercury')
+
+# (2)
+
+n=length(FishMercury$Mercury)
+
+N<-10^4; Mercury.mean <- numeric(N)
+for (i in 1:N) {
+  Mercury.mean[i]<-mean(sample(FishMercury$Mercury, n, replace = TRUE))
+}
+
+hist(Mercury.mean, breaks= "FD",main = ("Bootstrap distribution of means"), probability = TRUE)
+curve(dnorm(x, mean(Mercury.mean), sd(Mercury.mean)), col = "red", add = TRUE)
+
+# standard error
+sd(Mercury.mean)
+# 0.05819786
+
+
+#95% boostrap percentile interval
+quantile(Mercury.mean,c(0.025,0.975))
+#    2.5%     97.5% 
+#   0.1123992 0.3070675
+
+
+# (3)
+# Quantiles
+# The Quantiles report lists selected percentiles for each level of the X factor variable. 
+# The median is the 50th percentile, and the 25th and 75th percentiles are called the quartiles.
+
+n=length(FishMercury$Mercury)
+
+N<-10^4; Mercury.mean <- numeric(N)
+for (i in 1:N) {
+  Mercury.mean[i]<-mean(sample(FishMercury$Mercury, n, replace = TRUE),trim=0.25)
+}
+
+hist(Mercury.mean, breaks= "FD",main = ("Bootstrap distribution of means"), probability = TRUE)
+curve(dnorm(x, mean(Mercury.mean), sd(Mercury.mean)), col = "red", add = TRUE)
+
+# standard error after remove outlier 
+sd(Mercury.mean)
+# 0.01065899
+
+
+#95% boostrap percentile interval after remove outlier 
+quantile(Mercury.mean,c(0.025,0.975))
+#      2.5%     97.5% 
+#   0.1075000 0.1491875 
+
+# (4)
+# I used 25% trimed mean to generate bootstrap distribution, The skewness decrasesd.
+# for standard error, it reduces the standard error from 0.05819786 to 0.01065899.
+# And for bootstrap 95% percentile interval, it also shrink the interval from 0.1123992 0.3070675 to 0.1075000 0.1491875 .
+
+
+
+# 3. Exercise 17 on page 133. You can check your numerical answers against page 402.
+BookPrices <- read.csv("C:/Users/Mo.Pei/Desktop/156/Data/BookPrices.csv")
+
+# (1)
+# math&science
+math<-subset(BookPrices, subset = (Area=="Math & Science"),drop=TRUE)
+summary(math$Price)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 77.95  131.20  157.80  156.70  191.70  222.70 
+hist(math$Price)
+boxplot(math$Price,ylab='math book price')
+
+# social&science
+social<-subset(BookPrices, subset = (Area=="Social Sciences"),drop=TRUE)
+summary(social$Price)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 11.00   19.95  136.00   98.99  163.40  209.00 
+hist(social$Price)
+boxplot(social$Price,ylab='social science book price')
+
+
+# (2)
+
+# math&science
+n=length(math$Price)
+
+N<-10^4; math_price.mean <- numeric(N)
+for (i in 1:N) {
+  math_price.mean[i]<-mean(sample(math$Price, n, replace = TRUE))
+}
+
+hist(math_price.mean, breaks= "FD",main = ("Bootstrap distribution of means"), probability = TRUE)
+curve(dnorm(x, mean(math_price.mean), sd(math_price.mean)), col = "red", add = TRUE)
+
+qqnorm(math_price.mean)
+qqline(math_price.mean)
+
+# standard error after remove outlier 
+sd(math_price.mean)
+# 7.400671
+
+#from qq plot and approximatin normal curve, the bootstrap distribution approximates normal with
+#7.4 standard deviation
+
+# social&science
+n=length(social$Price)
+
+N<-10^4; social_price.mean <- numeric(N)
+for (i in 1:N) {
+  social_price.mean[i]<-mean(sample(social$Price, n, replace = TRUE))
+}
+
+hist(social_price.mean, breaks= "FD",main = ("Bootstrap distribution of means"), probability = TRUE)
+curve(dnorm(x, mean(social_price.mean), sd(social_price.mean)), col = "red", add = TRUE)
+
+qqnorm(social_price.mean)
+qqline(social_price.mean)
+# standard error after remove outlier 
+sd(social_price.mean)
+# 16.9058
+
+#from qq plot and approximatin normal curve, the bootstrap distribution approximates normal with
+#16.9058 standard deviation
+
+# (3)
+
+N<-10^4; math_social.ratio <- numeric(N)
+for (i in 1:N) {
+  social_price.mean<-mean(sample(social$Price, n, replace = TRUE))
+  math_price.mean<-mean(sample(math$Price, n, replace = TRUE))
+  math_social.ratio[i]<-math_price.mean/social_price.mean
+}
+
+hist(math_social.ratio, main = "Bootstrap distribution of ratio of means",probability = TRUE)
+curve(dnorm(x,mean=mean(math_social.ratio),sd=sd(math_social.ratio)), col = "red", add = TRUE)
+qqnorm(math_social.ratio)
+qqline(math_social.ratio)
+
+abline(v=mean(math_social.ratio), col = "red", lty = 2)
+abline(v=mean(math$Price)/mean(social$Price), col = "blue", lty = 4)
+
+#I can see from qq plot and normal approximatino curve that the ratio of two means plot is skewed.
+# Also, there a bias between the mean of bootstrap distribution and original sample mean
+
+
+# (4)
+quantile(math_social.ratio, c(.025, .975))
+# 2.5%    97.5% 
+#   1.154176 2.433716
+
+# we are 95% confident that the true ratio of two means with in interval of 1.154176 and 2.433716 
+
+# (5)
+
+
+bias<-mean(math_social.ratio) - mean(math$Price)/mean(social$Price) #the bias
+bias
+# 0.05115976
+sd<-sd(math_social.ratio) # assess bias relative to this
+sd
+# 0.3278047
+bias/sd
+# 0.1560678
+
+# the ratio of bias to sd is over 10%, so it is large enough to potentially have a substional effect
+# on accuracy of confidence intervals.
+
+
+# Question 4
+
+gender <- c(rep("men", 819),rep("women",756))
+outcome<- c(rep("fail",41),rep("success",(819-41)),rep("fail",23),rep("success",(756-23)))
+graduate_rate<-data.frame(gender, outcome)
+head(graduate_rate)
+table(graduate_rate$gender, graduate_rate$outcome)
+write.csv(graduate_rate,"graduate_rate.csv")   
+
+men_fail<-sum(gender=='men'&outcome=='fail')
+men_fail
+men_fail_rate<-men_fail/sum(gender=='men')
+men_fail_rate
+# 0.05006105
+
+women_fail<-sum(gender=='women'&outcome=='fail')
+women_fail
+women_fail_rate<-women_fail/sum(gender=='women')
+women_fail_rate
+# 0.03042328
+
+
+#ratio of men fail rate to woman fail rate
+RelRisk<-men_fail_rate/women_fail_rate
+RelRisk
+# 1.645485
+# this means within five year male students are 1.645 times higher to fail to graduate
+# then female students
+
+men_graduate<-subset(graduate_rate,select = outcome,subset=gender=='men', drop = TRUE)
+women_graduate<-subset(graduate_rate,select = outcome,subset=gender=='women', drop = TRUE)
+
+N <- 10^4; ratio <- numeric(N); prop1 <-numeric(N); prop2 <- numeric(N)
+for (i in 1:N) {
+  sample1 <-sample(men_graduate,replace = TRUE)
+  sample2 <-sample(women_graduate, replace = TRUE)
+  prop1[i] <- mean(sample1 == "fail")
+  prop2[i] <- mean(sample2 == "fail")
+  ratio[i] <-prop1[i]/prop2[i]
+}
+
+sample(1:10,replace=TRUE)
+
+hist(ratio, xlab = "Relative Risk")  
+abline(v = mean(ratio), col = "red")
+abline(v = RelRisk, col = "blue")
+bias <- mean(ratio) - RelRisk; bias  
+stderr <- sd(ratio); stderr
+bias/stderr
+# 0.154023
+
+#Calculate the bootstrap percentile confidence interval
+CI = quantile(ratio, c(0.025, 0.975)); CI
+# 2.5%    97.5% 
+#   1.015385 2.826923 
+abline(v = CI[1], col = "green")
+abline(v = CI[2], col = "green")
+
+CINorm = qnorm(c(0.025, 0.975), mean(ratio), sd(ratio)); CINorm
+# 0.7853094 2.6523838
+abline(v = CINorm[1], col = "magenta")
+abline(v = CINorm[2], col = "magenta")
+
+#I can see that normal distribution's 95% CI shifts to left from bootstrap
+# distribution 
+
+plot(prop2, prop1, xlim=c(0,0.1), ylim=c(0,0.1), xlab = "women fail graduate", ylab = "men fail graduate")
+abline(h = mean(prop1), col = "red")
+abline(v = mean(prop2), col = "red")
+
+abline(0, mean(ratio), col = "blue")   #slope is the bootstrap mean
+abline(0, CI[1], col = "black") #2.5% below this line
+abline(0, CI[2], col = "black") #2.5% above this line
