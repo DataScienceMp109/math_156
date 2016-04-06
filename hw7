@@ -1,0 +1,60 @@
+
+
+
+
+#Problem Five
+# If population's sigma is known
+L <- 18.05 + qnorm(0.05) * 5/sqrt(20) #usually less than the true mean
+U <- 18.05 + qnorm(0.95) * 5/sqrt(20) #usually greater than the true mean
+L;U
+# 90% confidence interval is between 16.211 and 19.889 
+
+# If population's sigma is not known, use sample's standard deviation
+counter <- 0
+plot(x =c(11,25), y = c(1,100), type = "n", xlab = "", ylab = "") #blank plot
+for (i in 1:1000) {
+  x <-rnorm(20, 18.05, 5) #random sample
+  L <- mean(x) + qt(0.05, 19) * sd(x)/sqrt(20) #usually less than the true mean
+  U <- mean(x) + qt(0.95, 19) * sd(x)/sqrt(20) #usually greater than the true mean
+  if (L < 18.05 && U > 18.05) counter <- counter + 1 #count +1 if we were correct
+  if(i <= 100) segments(L, i, U, i)
+}
+abline (v = 18.05, col = "red") #vertical line at true mean
+counter/1000 #what fraction of the time did our confidence interval include the true mean?
+# 0.903
+qt(c(0.05, .95), 19) #quantiles are more than 2 standard deviations
+
+# As expected T confidence interval has probablity of 90% to catch the true mean of population
+
+
+
+#Problem Six
+5.29 + qt(0.25, 499) * (3.52/sqrt(500))
+# 75% upper confidence interval is (-inf,5.183745)
+
+plot(x =c(0,10), y = c(1,100), type = "n", xlab = "", ylab = "") #blank plot
+
+means <- numeric(1000);lower = numeric(1000); upper = numeric(1000)
+for (i in 1:500) {
+  x <-rgamma(500, (5/12.25)*5,5/12.25) #random sample from population with mean 5, variance 12.25
+  means[i] = mean(x) #accumulate statistics about the sample mean
+  #Estimate a confidence interval from Student t
+  lower[i] <- mean(x) + qt(0.25, 499) * sd(x)/sqrt(500) #usually less than the true mean
+  upper[i] <- +Inf #usually greater than the true mean
+  if(i <= 100) segments(lower[i], i, upper[i], i)
+}
+abline (v = 0, col = "red") #vertical line at true mean
+#Quantiles for the sampling distribution of the population
+qnt<-quantile(means, c(.025, .975)); qnt ; sum(qnt)/2
+#These are close to the mean confidence interval
+mean(lower); mean(upper); (mean(lower)+ mean(upper))/2
+
+sum(means > qnt[2])/1000 #what fraction of the time did upper quantile fall below true mean?
+sum(25 > upper)/1000 #what fraction of the time did Student's confidence interval fall below the true mean?
+sum(means < qnt[1])/1000 #what fraction of the time did lower quantile lie above true mean?
+sum(25 < lower)/1000 #what fraction of the time did Student's confidence interval lie above the true mean?
+
+#The assumption behind the Student t distribution was not satisfied.
+#We did very well by looking at more samples, but that is cheating.
+#Perhaps we could use a bootstrap, but not today.
+
