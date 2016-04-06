@@ -1,5 +1,116 @@
 
 
+#Problem One
+# (a)
+#chi square is degree of freedome is two and also is exponential distribution with mean of 2
+#sum of n chi quare of r degree freedom is chi square distribution with nr degress freedom.
+n <- 3
+N <- 10^4
+y <- matrix(0,N,n)
+for (j in 1:n){
+  e <- numeric(N)
+  for (i in 1:N) {
+    e[i] <- rexp(100,1/2)
+  }
+  y[,j] <- e
+}
+
+# adding three chi square degree freedom 
+z <- rowSums(y)
+hist(z, breaks= "FD", probability = TRUE)
+curve(dchisq(x,6), col = "red", add = TRUE)
+
+
+# (b)
+N<- 10^4
+unif.mean <- numeric(N)
+for (i in 1:N){
+  unif.mean[i] <- mean(runif(50,0,1))
+}
+
+standard_norm<-(unif.mean-mean(unif.mean))/sd(unif.mean)
+t_new<-standard_norm/sqrt(z/6)
+
+hist(t_new, breaks= "FD", probability = TRUE)
+curve(dt(x,6), col = "red", add = TRUE)
+
+
+#Problem Two
+
+#gamma function
+my.gamma<-Vectorize(function(r) integrate(function(x) x^(r-1)*exp(-x), 0, Inf)$val)
+
+# t-density function from page 388 
+my.t <- Vectorize(function(t,k) my.gamma((k+1)/2)/ (sqrt(k*pi) * my.gamma(k/2) * (1+(t^2)/k)^((k+1)/2)) )
+
+# four degree freedom
+curve(my.t(x,4), col = "green",xlim=c(-2,2))
+curve(dt(x,4), col = "brown",xlim=c(-2,2), lty = 2, add = TRUE)
+
+# five degree freedom
+curve(my.t(x,5), col = "green",xlim=c(-2,2))
+curve(dt(x,5), col = "brown",xlim=c(-2,2), lty = 2, add = TRUE)
+
+k<-5
+N <- 50000
+vars <- numeric(N)
+moment_4 <- numeric(N)
+for (i in 1:N) {
+  x <- rt(100,k)
+  vars[i] <- var(x)
+  moment_4[i] <- mean(x^4)
+}
+
+
+#plot 4th moments
+hist(moment_4)
+# plot obs and expected variance
+hist(vars, breaks="FD",xlim=c(0,10))
+abline(v = k/(k-2), col = "red", lty = 2);
+var_mean <- mean(vars)
+var_theory <- k/(k-2)
+var_mean;var_theory
+
+
+#Problem Three
+
+N<-5000; 
+mean_square <- numeric(N)
+vars <- numeric(N)
+for (i in 1:N) {
+  x <- runif(6,-1,1)
+  mean_square[i] <- mean(x)^2
+  vars[i] <- var(x)
+}
+plot(mean_square,vars)
+cor.test(mean_square, vars)
+
+# correlation coefficent is -0.3164728 and so there is a negative relationship between mean square and 
+# variance. 
+
+# anecdotal situations
+extreme <- c(-1, -1.2, -1.03, -1.97, -1.9, -.99)
+extreme_mean_square <- mean(extreme)^2
+extreme_var <- var(extreme)
+extreme_mean_square; extreme_var
+# 1.818003, 0.2127767
+
+extreme <- c(-0.1, 0.2, -.03, .07, -.09, .09)
+extreme_mean_square <- mean(extreme)^2
+extreme_var <- var(extreme)
+extreme_mean_square; extreme_var
+# 0.0005444444, 0.01374667
+
+# from an extreme case that all points concentrate on -1 to 0
+# the variance is 0.21 to 0.01. So it shows when square of mean increases
+# the variance decreases.
+
+
+
+
+# Problem four
+
+
 
 
 #Problem Five
