@@ -1,4 +1,6 @@
 
+#Assignment Name: HW 7
+#Student Name: Mo Pei
 
 #Problem One
 # (a)
@@ -109,7 +111,90 @@ extreme_mean_square; extreme_var
 
 
 # Problem four
+NCBirths2004 <- read.csv("C:/Users/peimo/Desktop/MATH 156/Data/NCBirths2004.csv")
 
+# (a)
+weight<-NCBirths2004$Weight
+N <- 10^3
+mean_square <- numeric(N)
+for (i in 1:N) {
+  x <- sample(weight,6)
+  y <- (x - mean(weight))/sqrt(var(weight))
+  mean_square[i] <- y^2 * 6
+}
+hist(mean_square, breaks= "FD", probability = TRUE)
+curve(dchisq(x,1), col = "red", add = TRUE)
+
+# not closely followed chi square with 1 degree freedom
+N <- 10^3
+square_mean <- numeric(N)
+for (i in 1:N) {
+  x <- sample(weight,6)
+  y <- (x - mean(weight))/sqrt(var(weight))
+  square_mean[i] <- y^2 * 6
+}
+hist(square_mean, breaks= "FD", probability = TRUE)
+curve(dchisq(x,1), col = "red", add = TRUE)
+
+# (b)
+N <- 10^3
+sum_square <- numeric(N)
+for (i in 1:N) {
+  x <- sample(weight,6)
+  y <- (x - mean(weight))/sqrt(var(weight))
+  sum_square[i] <- sum(y^2) 
+}
+hist(sum_square, breaks= "FD", probability = TRUE)
+curve(dchisq(x,6), col = "red", add = TRUE)
+
+# It fits better for chi sq degree freedom of 6
+
+# (c)
+N <- 10^3
+sample_var <- numeric(N)
+for (i in 1:N) {
+  x <- sample(weight,6)
+  y <- (x - mean(weight))/sqrt(var(weight))
+  sample_var[i] <- var(y)*5
+}
+hist(sample_var, breaks= "FD", probability = TRUE)
+curve(dchisq(x,5), col = "red", add = TRUE)
+
+# It fits better for chi sq degree freedom of 5
+
+# (d)
+N <- 10^3
+sample_var <- numeric(N)
+square_mean<- numeric(N)
+for (i in 1:N) {
+  x <- sample(weight,6)
+  y <- (x - mean(weight))/sqrt(var(weight))
+  sample_var[i] <- var(y)
+  square_mean[i] <-(mean(y))^0.5
+}
+plot(square_mean,sample_var)
+cor.test(square_mean, sample_var)
+
+# with correlation coefficient of 0.155. 
+# they are almost uncorrelated 
+
+# (e)
+N <- 10^3
+sample_sd <- numeric(N)
+sample_mean<- numeric(N)
+mean_sd_ratio <- numeric(N)
+for (i in 1:N) {
+  x <- sample(weight,6)
+  y <- (x - mean(weight))/sqrt(var(weight))
+  sample_sd[i] <- sd(y)
+  sample_mean[i] <-mean(y)
+  mean_sd_ratio[i]<- sample_mean[i] / sample_sd[i] 
+}
+hist(mean_sd_ratio, breaks= "FD", probability = TRUE)
+curve(dchisq(x,5), col = "red", add = TRUE)
+
+
+# It dose not follow chi square with degree freedom of 5
 
 
 
@@ -140,8 +225,8 @@ qt(c(0.05, .95), 19) #quantiles are more than 2 standard deviations
 
 
 #Problem Six
-5.29 + qt(0.25, 499) * (3.52/sqrt(500))
-# 75% upper confidence interval is (-inf,5.183745)
+5.29 + qt(0.25, 499) * 3.52/(500)^0.5
+# 75% upper confidence interval is (5.183745, inf)
 
 plot(x =c(0,10), y = c(1,100), type = "n", xlab = "", ylab = "") #blank plot
 
