@@ -23,6 +23,7 @@ hist(z, breaks= "FD", probability = TRUE)
 curve(dchisq(x,6), col = "red", add = TRUE)
 
 
+
 # (b)
 N<- 10^4
 unif.mean <- numeric(N)
@@ -71,7 +72,11 @@ hist(vars, breaks="FD",xlim=c(0,10))
 abline(v = k/(k-2), col = "red", lty = 2);
 var_mean <- mean(vars)
 var_theory <- k/(k-2)
-var_mean;var_theory
+var_mean
+# 1.667581
+var_theory
+# 1.666667
+# So theory variance closes to simulation variance 
 
 
 #Problem Three
@@ -85,7 +90,7 @@ for (i in 1:N) {
   vars[i] <- var(x)
 }
 plot(mean_square,vars)
-cor.test(mean_square, vars)
+cor(mean_square, vars)
 
 # correlation coefficent is -0.3164728 and so there is a negative relationship between mean square and 
 # variance. 
@@ -111,7 +116,7 @@ extreme_mean_square; extreme_var
 
 
 # Problem four
-NCBirths2004 <- read.csv("C:/Users/peimo/Desktop/MATH 156/Data/NCBirths2004.csv")
+NCBirths2004 <- read.csv("C:/Users/Mo.Pei/Desktop/156/Data/NCBirths2004.csv")
 
 # (a)
 weight<-NCBirths2004$Weight
@@ -126,15 +131,7 @@ hist(mean_square, breaks= "FD", probability = TRUE)
 curve(dchisq(x,1), col = "red", add = TRUE)
 
 # not closely followed chi square with 1 degree freedom
-N <- 10^3
-square_mean <- numeric(N)
-for (i in 1:N) {
-  x <- sample(weight,6)
-  y <- (x - mean(weight))/sqrt(var(weight))
-  square_mean[i] <- y^2 * 6
-}
-hist(square_mean, breaks= "FD", probability = TRUE)
-curve(dchisq(x,1), col = "red", add = TRUE)
+
 
 # (b)
 N <- 10^3
@@ -147,7 +144,8 @@ for (i in 1:N) {
 hist(sum_square, breaks= "FD", probability = TRUE)
 curve(dchisq(x,6), col = "red", add = TRUE)
 
-# It fits better for chi sq degree freedom of 6
+# It fits better for chi sq degree freedom of 6 then problem a
+
 
 # (c)
 N <- 10^3
@@ -219,7 +217,7 @@ abline (v = 18.05, col = "red") #vertical line at true mean
 counter/1000 #what fraction of the time did our confidence interval include the true mean?
 # 0.903
 qt(c(0.05, .95), 19) #quantiles are more than 2 standard deviations
-
+-1.729133  1.729133
 # As expected T confidence interval has probablity of 90% to catch the true mean of population
 
 
@@ -228,29 +226,34 @@ qt(c(0.05, .95), 19) #quantiles are more than 2 standard deviations
 5.29 + qt(0.25, 499) * 3.52/(500)^0.5
 # 75% upper confidence interval is (5.183745, inf)
 
-plot(x =c(0,10), y = c(1,100), type = "n", xlab = "", ylab = "") #blank plot
 
-means <- numeric(1000);lower = numeric(1000); upper = numeric(1000)
+means <- numeric(500);lower = numeric(500)
 for (i in 1:500) {
   x <-rgamma(500, (5/12.25)*5,5/12.25) #random sample from population with mean 5, variance 12.25
   means[i] = mean(x) #accumulate statistics about the sample mean
   #Estimate a confidence interval from Student t
   lower[i] <- mean(x) + qt(0.25, 499) * sd(x)/sqrt(500) #usually less than the true mean
-  upper[i] <- +Inf #usually greater than the true mean
-  if(i <= 100) segments(lower[i], i, upper[i], i)
+  
 }
-abline (v = 0, col = "red") #vertical line at true mean
+
+mean(means)
+# 5.001879
+
+hist(means)
+
+hist(lower)
+
 #Quantiles for the sampling distribution of the population
-qnt<-quantile(means, c(.025, .975)); qnt ; sum(qnt)/2
+qnt<-quantile(means, .25);qnt
 #These are close to the mean confidence interval
-mean(lower); mean(upper); (mean(lower)+ mean(upper))/2
 
-sum(means > qnt[2])/1000 #what fraction of the time did upper quantile fall below true mean?
-sum(25 > upper)/1000 #what fraction of the time did Student's confidence interval fall below the true mean?
-sum(means < qnt[1])/1000 #what fraction of the time did lower quantile lie above true mean?
-sum(25 < lower)/1000 #what fraction of the time did Student's confidence interval lie above the true mean?
+sum(means < qnt[1])/500 #what fraction of the time did lower quantile lie above true mean?
+0.25
+sum(5 < lower)/500 #what fraction of the time did Student's confidence interval lie above the true mean?
+0.246
 
-#The assumption behind the Student t distribution was not satisfied.
-#We did very well by looking at more samples, but that is cheating.
-#Perhaps we could use a bootstrap, but not today.
+# so we can see lower bond of one sided confidence is little bit off since the distribution is skewed. 
+# so if underline distribution is not normal distribution, the t test does not work
+
+
 
