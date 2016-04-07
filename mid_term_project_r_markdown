@@ -1,0 +1,517 @@
+---
+title: "Pei_Mo_Midterm_Project"
+author: "Mo"
+date: "March 23, 2016"
+output: word_document
+---
+ 
+When is the best time to find jobs? 
+
+Salary competition: Developer vs DBA? statistician vs Actuary? 
+CI of statistician salary? 
+
+Titanic passengers survive?
+
+
+==================================================================================
+ 
+#### Your name: Mo Pei
+#### Team member' names: Mo Pei
+#### Project Name: Mid Term Project, MATH 156 Harvard University
+ 
+
+
+
+### Introduction
+
+
+About job huntings, besides interview skills and working experience,there are other factors affect success of find a job. Among those jobs, database administors and software developers are popular ones. Do they get paid similar? If this is the truth, it is good thing to get work as DBA since SQL is somehow easier than JAVA or C++. Another similar comparison, the income of actuary and statistician, they use similar skills, so do they got paid similar too? Furthermore, I will generate an interval to estimate the mean of statistician mean salary.
+
+Finally, I am interested in the survive of Titanic passengers in terms of their genders, class, and age. Men are physically stronger then woman and children. So in that server situation, do they have advantage to survive over woman and child?  Also, what is situation in different classes? First , second, thrid, and crew?
+
+
+### Abstract
+
+There are some others things affect successfully find a job. I researched the employment data from http://www.bls.gov/oes/, a country wide employmet data set about different occupation in differet time.I looked the big picture of employment by different occupations, top demand jobs are "Service-Providing" on average have 321816.3 jobs, followed by Colleges-Universities-Professional Schools on average 260900 jobs, and third one is Administrative and Support Services 226600 jobs. To get the data of each quarter, I group by data by quarters and I got mean for each quarter. I found the second quarter has highest job demand of 96210 jobs, followed by 70609 jobs offered in the third quarter and fourth and first quarters have lowest demond of 66535 and 67261 jobs. After I run the tests, both theoretical result of p value and simulation test's p value are smaller than 0.01.So employmentis are different among different quarters. So it suggests that it is easier to find jobs in certain quarter than other quarters. 
+
+Software developers and database developers are two popular jobs in IT field. I want see if their salary are equal. After the test, P value is smaller than 0.05, so it is significant. Developer's median salary is not the same as that of DBA. Similarly, actuary and statistician are two professions with highly quantitative skills and both of them have stats knowledge. I am curoius about how their paid different. My test suggests that P value is smaller than 0.05. On average actuary dose not make the same amount of money as statisticians do. Furthermore, I want to estimate range of mean salary of statistician. After I consctruct a confidence interval, I am 90% confident that the mean of mean salary of statistician is between 71091.31 and 76628.69.
+
+After I test job hunting and salary, I reserached Titanic! I doubt there are relationships among genders, age, and class and survive of Titanic passengers. After my test, both p values of genders, age, and class are smaller than 0. So there is relationship between genders and survive. Also, there is relationship between classes and survive. Additionally, At titanic the survive rate of man is lowest, followed by children, and woman. I found that children at the third class only survive one half. At class two has lowest survive rate is man only 8% survived.
+
+
+Let us look the tests!
+
+### Test One: Employment and Quarters(chi-square&permutaion)
+
+Test One: Employment and Quarters (chi-square&permutaion)
+I got the data from http://www.bls.gov/oes/. My test has one quantitative variable and one categorical variable. The categorical One is  quarters and the quantitative one is employment amount.The record has monthly record and I transformed them into quarters. It has 318192 recodes. I randomly select 2000 records to research. I plot the big image of country wide employment. Some jobs offer over 70,000 jobs in one quarter and some are over 50,000. Also, I can see from boxplot, some quarters offer more jobs than others. I test relationship between each quarter and employment number. Use goodness fit.test, H0: p1=p2=p3=p4 (pi , proportion of each quarter employment in a year) H1: at least pi not equal to the rest mean employment of month. Before I run the test, I check conditions of chi square. the sampling method is random sampling. The expected value of the number of sample observations in each level of the variable is at least 5. First, we use chi square distribution, a theoretical distribution to estimate the test statistics X-squared = 7991.6, degree of freedom = 3, p-value < 0.05. After, I use permutation distribution to test. I got both p value are smaller than 0.01. So both methods support that there is a relationship between quarters and employments.
+
+
+```{r}
+employment_month_exclu_nonfam_nonprivate <- read.csv("C:/Users/peimo/Desktop/MATH 156/mid_term/employment_month_exclu_nonfam_nonprivate.csv")
+```
+ 
+```{r}
+Employment_Stats<-data.frame(employment_month_exclu_nonfam_nonprivate)
+dim(Employment_Stats)
+```
+ 
+Dimension 318192 rows(records)  7 columns(variable) my test uses one categorical variable(month) and one quantative variable(current.employment)
+ 
+ 
+```{r}
+# Randomly choose 2000 records
+choose_range<-c(1:318192)
+sample_index<-sample(choose_range,2000)
+```
+ 
+```{r}
+sample_stats<-Employment_Stats[sample_index,]
+ 
+summary(sample_stats$Current.Employment)
+ 
+options(scipen = 999)
+barplot(sample_stats$Current.Employment, main="Employment amonut Distribution",
+        ylab="Number of employment",xlab="Job title",ylim=range(1:9000000),col='brown')
+ 
+job_title<-tapply(sample_stats$Current.Employment, sample_stats$Title,mean)
+ 
+ 
+job_title<-sort(job_title, decreasing=TRUE)
+job_title<-data.frame(job_title)
+ 
+top_10_job_title<-head(job_title,10)
+top_10_job_title
+```
+ 
+```{r}
+write.csv(top_10_job_title, file = "top_10_job_title.csv")
+```
+ 
+ 
+ 
+Transform data from monthly to quarterly
+```{r}
+quarter_transform <- function(x) {
+  type<-c(x)
+  if (type >=10) 4
+  else if (type<=9&type>=7)  3
+  else if (type<=6&type>=4)  2
+  else if (type<=3&type>=1)  1
+}
+```
+ 
+```{r}
+N<-length(sample_stats$Month); Quarter<-numeric(N)
+for (i in 1:N){
+  Quarter[i]<-quarter_transform(sample_stats$Month[i])
+}
+ 
+# add a new column Quarter to the table
+sample_stats$Quarter<-Quarter
+```
+ 
+```{r}
+#side by side boxplots
+boxplot(Current.Employment~Quarter, data=sample_stats, main="Side-by-side Boxplots")
+# look at more closely in boxplots
+boxplot(Current.Employment~Quarter, data=sample_stats, main="Side-by-side Boxplots",ylim=range(100000:800000))
+```
+ 
+Calculate mean and sum for each quarter
+```{r}
+quarter_mean<-tapply(sample_stats$Current.Employment, sample_stats$Quarter,mean)
+ 
+quarter_sum<-tapply(sample_stats$Current.Employment, sample_stats$Quarter,sum)
+```
+ 
+```{r}
+hist(quarter_mean, main=" Employment Distribution",
+     xlab="Number of employment",col='brown',freq=FALSE)
+```
+ 
+Test relationship between each quarter and employment 
+Use goodness fit
+ 
+H0: p1=p2=p3=p4  (pi,proporation of quarter employment to year)
+H1: at least pi not equal to the rest
+
+mean employment of month 67261 96210 70609 66535  round to integer
+ 
+check conditions of chi square test
+The sampling method is simple random sampling.
+The expected value of the number of sample observations in each level of the variable is at least 5
+ 
+```{r}
+mean_employment<-c(rep("1",67261),rep("2",96210),rep("3",70609),rep("4",66535))
+Obs<-table(mean_employment);Obs
+```
+ 
+```{r}
+chisq1 <-function(Obs){
+  Expected <- rep(sum(Obs)/length(Obs),length(Obs))
+  sum((Obs-Expected)^2/Expected)
+}
+```
+ 
+```{r}
+observed <-chisq1(Obs);observed #value of 7991.601
+#here: we use chi square distribution, a theoritical distribution to estimate test statistics
+Pvalue <-chisq.test(Obs); Pvalue #P-value of samll then 0.01 gests that distribution is not uniform
+```
+ 
+ 
+```{r}
+#Simulation, null distribution there is no relationship between quarter and employment number
+quarter_new=c("1","2","3","4"); quarter_new
+ 
+#here: we use permutaion as null distribution, a non-parametric way to estimate test statistics
+N =10^3 -1; result<-numeric(N)
+for (i in 1:N){
+  quarter_new.sim<-sample(quarter_new,sum(Obs), replace= TRUE)
+  result[i]<-chisq1(table(quarter_new.sim))
+}
+```
+ 
+```{r}
+hist(result)
+abline(v = observed, col = "red")
+Pvalue <- (sum(result >= observed)+1)/(N+1); Pvalue   #P-value will be close to 0.001
+#The Pvalue from our simulation agrees with the chi square test because our samples do:
+hist(result, probability = TRUE)
+curve(dchisq(x, df=3), col = "red", add= TRUE)
+```
+compared with theoritcial result of p value and simulated value, I got both p value are smaller then 0.01
+ 
+conclustion, employment number is different from different quarter So it is easier to find jobs in certain quarter than others
+ 
+ 
+ 
+ 
+### Test two:  Developer vs DBA (salary)(theoritical and simulation normal distribution)
+
+I got the data from http://www.bls.gov/oes/. My test has one quantitative variable and one categorical variable. The categorical variableOne is job type and the quantitative variable is mean salary. I want to research the difference two jobs'mean salaries. I use the concept if X and Y are independent random variables that are normally distributed then their sum is also normally distributed. The data set of both DBA and developer's salary are nearly normal. For salary of DBA, I got skewness and kurtosis 0.0470403 and 0.6469645. Also, from QQ plot, I can see it nearly normally distributed. For salary of actuary, I got skewness and kurtosis-0.120722 and -0.1721237. Also, from QQ plot, I can see it nearly normally distributed as well. I use two sided test to check if their salary is the same or not. H0: mean of median developer salary = mean of median dba salary H1: mean of median developer salary not equal mean of median dba salary. I got theoretical result of p value is 0.00001266284.It is significant on average. So I can reject the null hypothesis that developer's median salary is the same as that of DBAs. From the simulation method, P value is also smaller than 0.05, so it is significant too. So I can reject the null hypothesis that developer's median salary is the same as that of DBAs. It also proves the concept mentioned before. Based on both results from theoretical and simulation, the p values are greater than 0.05 so it is not significant. Thereby, the evidence support there is no difference for in median salary of dba and developer. 
+
+```{r}
+developer_dba <- read.csv("C:/Users/peimo/Desktop/MATH 156/mid_term/developer_dba.csv")
+```
+ 
+```{r}
+developer<-subset(developer_dba,subset=developer_dba$OCC_TITLE=='Software Developers, Applications')
+dba<-subset(developer_dba,subset=developer_dba$OCC_TITLE=='Database Administrators')
+```
+ 
+Test statistics is difference of median of programmer and dba
+```{r}
+developer_median<-developer$A_MEDIAN;developer_median
+dba_median<-dba$A_MEDIAN;dba_median
+```
+ 
+Since I use normal distribution, I use QQ plot, skewness, kurtosis ro normality
+```{r}
+# graph and plot distribution
+mu = mean(developer_median); mu
+#MGF second and third moment
+MC2 <- mean((developer_median-mu)^2)
+MC3 <- mean((developer_median-mu)^3)
+MC4 <- mean((developer_median-mu)^4)
+ 
+sigma<- sqrt(MC2)
+#third central moment divided by std^3
+skewness <- MC3/sigma^3
+kurtosis <- MC4/sigma^4-3
+skewness;kurtosis
+```
+ 
+```{r}
+qqnorm(developer_median)
+qqline(developer_median)
+hist(developer_median, probability = TRUE)
+curve(dnorm(x, mean=mean(developer_median),sd=sd(developer_median)), col = "red", add= TRUE)
+```
+ 
+```{r}
+mu = mean(dba_median); mu
+#MGF second and third moment
+MC2 <- mean((dba_median-mu)^2)
+MC3 <- mean((dba_median-mu)^3)
+MC4 <- mean((dba_median-mu)^4)
+ 
+sigma<- sqrt(MC2)
+#third central moment divided by std^3
+skewness <- MC3/sigma^3
+kurtosis <- MC4/sigma^4-3
+skewness;kurtosis
+```
+ 
+```{r}
+qqnorm(dba_median)
+qqline(dba_median)
+hist(dba_median, probability = TRUE)
+curve(dnorm(x, mean=mean(dba_median),sd=sd(dba_median)), col = "red", add= TRUE)
+```
+ 
+ 
+Concept: if X and Y are independent random variables that are normally distributed
+then their sum is also normally distributed
+ 
+H0: mean of median developer salary = mean of median dba salary
+H1: mean of median developer salary not equal mean of median dba salary
+ 
+#### we first use theoritical method to test
+```{r}
+length(developer_median)
+ 
+x_sample_u<-mean(developer_median)
+x_sample_var<-(var(developer_median)/52)
+```
+ 
+```{r}
+length(dba_median)
+ 
+y_sample_u<-mean(dba_median)
+y_sample_var<-(var(dba_median)/52)
+```
+ 
+ 
+Apply the concept that the sum of two independent normal random variable is still a normal random variable.
+```{r}
+w_u<-x_sample_u-y_sample_u
+w_var<-x_sample_var+y_sample_var
+ 
+# w~N(w_u,w_var)
+w_u;w_var^0.5
+ 
+```
+ 
+ 
+H0: mean of median developer salary = mean of median dba salary.so test statistics of difference is 0
+H1: difference is not 0
+ 
+```{r}
+z2<-(0-w_u)/(w_var^0.5)
+pnorm(z2,0,1)*2
+# p value is 0.00001266284
+```
+I got theoretical result of p value is 0.00001266284.It is significant on average. So I can reject the null hypothesis that developer's median salary is the same as that of DBAs.
+ 
+ 
+####Simulation method
+ 
+```{r}
+N<-10000;w<-numeric(N)
+for (i in 1:N){
+ 
+  x_sample_sim<-rnorm(52, mean = mean(developer_median), sd = sd(developer_median))
+  y_sample_sim<-rnorm(52, mean = mean(dba_median), sd = sd(dba_median))
+  w[i]<-mean(x_sample_sim)-mean(y_sample_sim)
+ 
+}
+```
+ 
+```{r}
+hist(w, freq = FALSE,xlim=range(0:20000)) #set freq to 'False' since we want to add normal pdf curve next
+curve(dnorm(x,mean(w),(var(w))^0.5),col='brown',add=TRUE)
+mean(w);(var(w))^0.5
+```
+So they are close to about mean with more spread in simulation distribution
+ 
+```{r}
+mean(0>w)*2
+```
+P value is smaller than 0.05 too, so it is significant.So I can reject the null hypothesis that developer's median salary is the same as that of DBAs.
+ 
+conclusion, based on both results from theoritical and simuation, the p values are smaller than 0.05
+So it is not significant. Thereby, the evidence support there are no difference for in salary of dba developer in U.S.
+ 
+ 
+### Test Three: actuary vs statistician (salary)(non parametric: permutation test)
+
+
+I got the data from http://www.bls.gov/oes/. My test has one quantitative variable and one categorical variable. The categorical variable is job type and the quantitative variable is mean salary. However, this time I use permutation test, a no parametric way to test. Although permutation test has fewer conditions to meet, my sample has a little discrepancy that one group has 32 data and the other is 47. Use permutation to test difference between mean salary of actuary and statistician. H0: difference is 0 H1: difference is not 0. Since p value is smaller than 0.01, I can reject null hypothesis that on average actuary make same amount of money as statistician. so we have evidence that on average actuary make more money than statistician do. 
+
+
+```{r}
+actuarial_statistitian <- read.csv("C:/Users/peimo/Desktop/MATH 156/mid_term/actuarial_statistitian.csv")
+```
+ 
+```{r}
+act<-subset(actuarial_statistitian,subset=actuarial_statistitian$OCC_TITLE=='Actuaries')
+stat<-subset(actuarial_statistitian,subset=actuarial_statistitian$OCC_TITLE=='Statisticians')
+```
+ 
+```{r}
+act_mean<-act$A_MEAN
+length(act_mean)
+ 
+stat_mean<-stat$A_MEAN
+length(stat_mean)
+```
+ 
+```{r}
+observed <- mean(act_mean)-mean(stat_mean)
+observed
+```
+ 
+Use permutation to test difference
+H0: difference is 0
+H1: difference is not 0
+```{r}
+N =10^4 -1; result<-numeric(N)
+for (i in 1:N){
+  index = sample(nrow(actuarial_statistitian),32)
+  result[i]=mean(actuarial_statistitian$A_MEAN[index])-mean(actuarial_statistitian$A_MEAN[-index])
+}
+hist(result)
+mean(result>observed)*2
+abline(v=observed,col='blue')
+```
+ 
+conclusion: since p value is smaller than 0. we reject null hypothesis that on avareage actuary make same amount of money as statistician so we have evidence that on average actuary make more money than statistian
+ 
+### 90% confidence interval for mean salary of statistician
+non parametric method bootstrap
+
+Construct 90% confidence interval for mean salary of statistician. Non parametric method bootstrap. I use bootstrap distribution to estimate of standard error of mean of mean salary of statistician. And use 0.9 quantile standard normal distribution to get 90 percent confidence interval Z value.So I am 90% confident that the mean of mean salary of statistician is between 71091.31 and 76628.69
+
+```{r}
+boot2=replicate(1000,{
+  cm = sample(stat_mean,replace=TRUE)
+  mean(cm)
+})
+mean(boot2)
+```
+ 
+```{r}
+hist(boot2, probability = TRUE)
+curve(dnorm(x,mean=mean(boot2),sd=sd(boot2)),col = "red", add= TRUE)
+```
+```{r}
+SE = sd(boot2)
+SE
+```
+ 
+get quantile of standard normal distribution
+```{r}
+qnorm(0.9)
+# 1.281552
+```
+ 
+construct CI of 90%
+```{r}
+LowerBoundNewCI= mean(boot2) - 1.281552 *SE
+UpperBoundNewCI= mean(boot2) + 1.281552 *SE
+ 
+LowerBoundNewCI
+UpperBoundNewCI
+```
+We are 90% confident that the mean of mean salary of statistician is between 71091.31 and 76628.69
+ 
+ 
+### Test four: gender, age, survive at Titanic
+ 
+Although we have enough data to calculate the rate of survive in different genders, class,and age, I am interested in what happend if there is  similar situation. Thereby, I assume there are a lot more people on board at Titanic and a lot more same ships sailing the same time and place, So if in that case, the result I have here is a rondom sample among those people and ships.
+
+First I study the relationship between survive and age and genders. Age and genders include man, woman, and children.My dataset has two categorical variables, one classes and one is survive status.I make a contingency table. I use chi square test as test statistics. Before test, I check the conditions of chi square, randomly sampled, independent, and each group having 5 more samples. I apply both theoretical and simulation ways to test. With degree freedom of 2, I got X-squared = 481.59, df = 2, p-value < 0.05 from theoretical test. P value of 0.0001 is from simulation. So both results are significant. There is relationship between ages, genders, and survive. 
+
+ 
+```{r}
+x_0 <- c(rep("Children",109),rep("Men",1690),rep("Women",425))
+y_0 <- c(rep("survive",56),rep("not survive",53),
+         rep("survive",338),rep("not survive",1352),
+         rep("survive",316),rep("not survive",109))
+genderage_survive <- table(x_0,y_0)
+genderage_survive
+```
+ 
+At titanic the survive rate of man is lowest, followed by children, and woman. I found that children at the third class only survive one half
+ 
+```{r}
+chisq <-function(Obs){
+  Expected <- outer(rowSums(Obs), colSums(Obs))/sum(Obs)
+  sum((Obs-Expected)^2/Expected)
+}
+```
+ 
+```{r}
+Obs<-genderage_survive
+observed = chisq(Obs); observed
+```
+ 
+```{r}
+N = 10^4-1; result<- numeric(N)
+for (i in 1:N) {
+  SE.permuted <- sample(y_0)
+  GSS.table <- table(x_0, SE.permuted)
+  result[i]= chisq(GSS.table)
+}
+hist(result, probability = TRUE)
+curve(dchisq(x, df=2), col = "red", add= TRUE)
+abline(v = observed, col="red") #observed chi square is highly unlikely
+Pvalue <- (sum(result >= observed) +1)/(N+1); Pvalue
+```
+ 
+For comparison, use the built-in chi square test from R
+```{r}
+chisq.test(x_0, y_0)
+```
+ 
+ 
+ 
+ 
+### class, crew survive
+ Second I study the relationship between survive and classes and crew. Classes and crew include first class, second class, third class, and crew.My dataset has two categorical variables, one genders,ages and one is survive status. I make a contingency table. I use chi square test as test statistics. Before that, I check the conditions of chi square test, randomly sampled, independent, and each group having 5 more samples. I apply both theoretical and simulation ways to test. With degree freedom of 3, I got X-squared = 193.81, df = 3, p-value < 0.05 from theoretical test. P value of 0.0001 is from simulation. So both results are significant. There is relationship between classes and crew, and survive.  My conclusion, there are difference of survival rate among genders and class. At titanic the survive rate of man is lowest, followed by children, and woman. I found that children at the third class only survive one half. At class two has lowest survive rate for man only 8% survived.
+ 
+ 
+```{r}
+x <- c(rep("Crew",908),
+       rep("First Class  ",325),
+       rep("Second Class",285),
+       rep("Third Class",706))
+ 
+y <- c(rep("survive",212),rep("not survive",696),
+       rep("survive",202),rep("not survive",123),
+       rep("survive",118),rep("not survive",167),
+       rep("survive",178),rep("not survive",528))
+genderage_survive <- table(x,y)
+genderage_survive
+```
+ 
+ 
+ 
+```{r}
+chisq <-function(Obs){
+  Expected <- outer(rowSums(Obs), colSums(Obs))/sum(Obs)
+  sum((Obs-Expected)^2/Expected)
+}
+ 
+Obs<-genderage_survive
+observed = chisq(Obs); observed
+```
+ 
+```{r}
+N = 10^4-1; result<- numeric(N)
+for (i in 1:N) {
+  SE.permuted <- sample(y)
+  GSS.table <- table(x, SE.permuted)
+  result[i]= chisq(GSS.table)
+}
+hist(result, probability = TRUE)
+curve(dchisq(x, df=3), col = "red", add= TRUE)
+abline(v = observed, col="red") #observed chi square is highly unlikely
+Pvalue <- (sum(result >= observed) +1)/(N+1); Pvalue
+#For comparison, use the built-in chi square test from R
+chisq.test(x, y)
+```
+ 
+ 
+ 
+ 
+My conclusion, there are difference of survival rate among genders and class. At titanic the survive rate of man is lowest, followed by children, and woman. I found that children at the third class only survive one half.At class two has lowest survive rate for man only 8% survied.
+
+
+
+
+### Results
+
+I use permutation distribution to simulate if there is no relationship between quarters and employment. I got both p value are smaller than 0.01. So both methods support that there is a relationship between quarters and employment. Both results from theoretical and simulation, the p values are greater than 0.05 so it is not significant. Thereby, the evidence support there is no difference for in salary of dba developer do. We reject null hypothesis that on average actuary make same amount of money as statistician so we have evidence that on average actuary make more money than statistician. We are 90% confident that the mean of mean salary of statistician is between 71091.31 and 76628.69. With degree freedom of 2, I got X-squared = 481.59, df = 2, p-value < 0.05 from theoretical test. P value of 0.0001 is from simulation. So both results are significant. There is relationship between ages, genders, and survive. With degree freedom of 3, I got X-squared = 193.81, df = 3, p-value < 0.05 from theoretical test. P value of 0.0001 is from simulation. So both results are significant. There is relationship between classes and crew, and survive.  
