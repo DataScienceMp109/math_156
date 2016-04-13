@@ -1,1 +1,186 @@
 
+#Assignment Name: HW 8
+#Student Name: Mo Pei
+
+# Problem One
+
+Quakes <- read.csv("C:/Users/peimo/Desktop/MATH 156/Data/Quakes.csv")
+
+#------------------------------------------------------------
+# This function takes input shape parameter k and
+# the data to compute
+# (1/k)+ (1/n)*sum (log(xi)) -(1/alpha)sum xi^klog(xi)=0
+# where alpha= sum xi^k.
+
+weibull.shape <- function(k, data)
+{
+  numer <- colSums(outer(data, k, "^") * log(data))
+  denom <- colSums(outer(data, k, "^"))
+  numer/denom - 1/k - mean(log(data))
+}
+
+#-----
+# This function takes input shape parameter k
+# and data to compute
+#  k^{th} root of (1/n) sum xi^k
+# n=number of data values
+
+weibull.scale <- function(k, data)
+{
+  mean(data^k)^(1/k)
+}
+
+##-----
+# uniroot is a built-in R function which estimates the root
+# of a function.
+# Provide function, any arguments needed for function,
+# and a guess of values two values around root.
+# Function values must be opposite signs at lower
+# and upper guess.
+
+#Now, we do the data specific commands
+timed <- Quakes$TimeDiff
+#alternatively, wind <- subset(Turbine, select=AveSpeed, drop=TRUE)
+
+uniroot(weibull.shape, data = timed, lower = 0.8,upper = 1)
+# root, shape K  is 0.9172097
+
+# With estimate of shape parameter, now find estimate
+# of scale parameters
+
+weibull.scale(0.9172097, timed)
+# root, scale lambda is 17.346 
+
+# Plot histogram with density curve overlap
+# The prob=TRUE option scales histogram to area 1.
+
+hist(timed, main = "Distribution of time difference",
+     xlab = "days", prob = TRUE)
+curve(dweibull(x, 0.9172097, 17.346), add = TRUE, col = "blue", lwd = 2)
+
+dev.new()
+plot.ecdf(timed,main = "ECDF of time difference data")
+curve(pweibull(x,0.9172097,17.346), add=TRUE, col="blue",lwd=2)
+
+# conclusion: we can see that the weibull distribution apprximates data
+# pretty good!
+
+library(stats4)
+MLL <-function(lambda, k) -sum(dweibull(timed, k, lambda, log = TRUE))
+mle(MLL,start = list(lambda = 10, k=0.5)) 
+# shape      scale 
+# 0.9171747 17.3432938 
+
+# Problem Two
+
+Service <- read.csv("C:/Users/peimo/Desktop/MATH 156/Data/Service.csv")
+
+# (a)
+
+wt <- Service$Times
+
+Moment1 <- mean(wt); Moment1
+Moment2 <- mean(wt^2); Moment2
+
+
+variance <- Moment2 - Moment1^2 
+
+# Gamma distribution
+# e[x] = k*theta
+# var[x] = k*theta^2
+
+k<- Moment1^2/variance; k
+# 2.670167
+theta <- Moment1/k; theta
+# 0.2602547
+
+hist(wt, prob=TRUE, main = "MLE estimate of gamma distribution")
+curve(dgamma(x, k, scale=theta), add=TRUE, col="blue",lwd=2)
+
+MLL <-function(shape, scale) -sum(dgamma(wt, shape=shape, scale=scale, log = TRUE))
+mle(MLL,start = list(shape = 1, scale = 1)) 
+# shape     scale 
+# 2.8127780 0.2470606 
+
+
+# (b)
+
+# Get the deciles
+q <- qgamma(seq(.1, .9, by = .1), 2.81, scale=.247)
+#range of wind
+range(wt)
+#encompass range of wind
+q <- c(0, q, 2.2)
+# Get the counts in each sub-interval. The plot=F command
+# repeat above but store output
+count <- hist(wt,breaks=q,plot=F)$counts
+expected <- length(wt)*.1
+# compute chi-square test statistic
+ChiSq <- sum((count-expected)^2/expected)
+pchisq(ChiSq, df =7, lower.tail = FALSE) #agrees with the P-value on page 146
+
+# p value is over 0.90 and so we conclude that 
+# the data from a gamma distribution with parameters shape 2.8127780 
+# and scale 0.2470606. 
+
+# (c) 
+
+dev.new()
+plot.ecdf(wt,main = "ECDF of Service Times")
+curve(pgamma(x, k, scale=theta), add=TRUE, col="blue",lwd=2)
+
+# Problem three
+
+# (a)
+score <- c(0.855, 0.891, 0.913, 0.989, 0.943)
+theta <- -5/sum(log(score)); theta
+# 11.55177
+
+# (b)
+my.t<-Vectorize(function(t) integrate(function(x) t*x^(t), 0, 1)$val)
+test.thetas <- my.t(c(1:20))  
+plot(test.thetas, main='theta estimate using method of moments',xlab="test theta")
+
+abline(h = mean(score), col = "red")
+print("we can see that the theta function crosses the red line at a theta value between
+    10 and 12. This is consistent with the MLE estimate ")
+
+# (c)
+
+
+
+
+# Problem Four
+
+# (a)
+
+lambda <- 5
+
+N <- 100000; x_bar <- numeric(N)
+for (i in 1:N) {
+  x <- rexp(2, lambda)
+  x_bar[i] <- mean(x)
+}
+
+# bias E[theta hat] - theta = 0 
+bias <- mean(x_bar) - (1/lambda); bias
+# 0.0005792527
+
+# (d)
+
+lambda <- 5
+
+N <- 100000; x_s <- numeric(N)
+for (i in 1:N) {
+  x <- rexp(2, lambda)
+  x_s[i] <- x[1:2]^0.5
+}
+
+# bias E[theta hat] - theta = 0 
+bias <- mean(x_s) - (1/lambda); bias
+# 0.1965748
+
+
+# Problem Five
+
+
