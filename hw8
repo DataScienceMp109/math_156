@@ -1,4 +1,3 @@
-
 #Assignment Name: HW 8
 #Student Name: Mo Pei
 
@@ -137,17 +136,37 @@ theta <- -5/sum(log(score)); theta
 # 11.55177
 
 # (b)
-my.t<-Vectorize(function(t) integrate(function(x) t*x^(t), 0, 1)$val)
-test.thetas <- my.t(c(1:20))  
-plot(test.thetas, main='theta estimate using method of moments',xlab="test theta")
 
-abline(h = mean(score), col = "red")
-print("we can see that the theta function crosses the red line at a theta value between
-    10 and 12. This is consistent with the MLE estimate ")
+# mean(score)=integral(x*theta*x^(theta-1))
+# mean(score)=integral(theta*x^(theta))
+# by integration
+# mean(score)=theta/(1+ theta)
+mean(score)
+# 0.9182
+# 0.9182=theta/(1+ theta)
+# 0.9182=theta(1-0.9182)
+# 0.9182=theta*0.0818
+# 0.9182/0.0818=theta
+# theta = 11.22494
 
 # (c)
+# likelihood for theta
+# likelihood = Pai(f(Xi,thetha))
+likelihood_fun <- function(theta)
+{
+  theta^5 * prod( score^(theta-1) )
+}
 
-
+#choose different theta
+N <- 20; likelihood <- numeric(N)
+for (i in 1:N) {
+  likelihood[i] <- likelihood_fun(i)
+}
+plot(likelihood,xlab = 'Theta')
+#MLE in vertical line
+abline(v = 11.55177, col = "red")
+# so likelihood values maximizes between 11 and 12. 
+# This is consistent with MLE result.
 
 
 # Problem Four
@@ -166,6 +185,7 @@ for (i in 1:N) {
 bias <- mean(x_bar) - (1/lambda); bias
 # 0.0005792527
 
+
 # (d)
 
 lambda <- 5
@@ -179,8 +199,66 @@ for (i in 1:N) {
 # bias E[theta hat] - theta = 0 
 bias <- mean(x_s) - (1/lambda); bias
 # 0.1965748
+# it is a biased estimate of theta
+
 
 
 # Problem Five
+install.packages("actuar")
+library(actuar)
+x <- rpareto(10, 1 , 2); x
+# (a)
+# consisent (1)if sample size goes to infinity, e(theta hat) = theta
+#           (2)if sample size goes to infinity, variance(theta hat) = 0
 
+
+plot(1, xlim= c(200, 20000), xlab='sample size',ylim = c(0, 250), log = "x", type = "n")
+N = 1000;
+for (n in c(250, 500, 1000, 2000, 5000, 10000, 20000)){
+  means = numeric(N);
+  for (i in 1:N){
+    x <- rpareto(n,1, 2)
+    means[i] = mean(x)
+  }
+  points( rep(n, N), means)
+}
+
+# conclusion: we can see that as sample size increases the mean of pareto distribution
+# does not converge to anything. so it is not consistant to anything. 
+
+# (b)
+
+n <- 10; N = 1000; medians = numeric(N)  #much larger epsilon
+#Repeat our procedure with the Cauchy distribution, whose expectation is undefined.
+for (i in 1:N){
+  x <- rpareto(n,1, 2)  #symmetric around theta = 5
+  medians[i] = median(x)
+}
+hist(medians, breaks = 100, xlim = c(1, 20),prob=TRUE)  #lots of outliers are not shown
+curve(dpareto(x,1,2), from = 1, to = 20,col='brown',add = TRUE)
+mean(abs(medians -5) > epsilon) #miss the target most of the time
+
+# (c)
+# as we get more data, we expect an estimate become more accurate
+# consisent (1)if sample size goes to infinity, e(theta hat) = theta
+#           (2)if sample size goes to infinity, variance(theta hat) = 0
+
+
+plot(1, xlim= c(200, 20000), ylim = c(0, 5), log = "x", type = "n")
+s <- 2
+epsilon <- .2
+abline(h = c(s + epsilon, s- epsilon), col = "red")
+N = 1000;  
+for (n in c(250, 500, 1000, 2000, 5000, 10000, 20000)){
+  medians = numeric(N);
+  for (i in 1:N){
+    x <- rpareto(n,1, s)
+    medians[i] <- median(x)
+  }
+  points( rep(n, N), medians)
+}
+
+
+# we can see when sameple size increase from 250 to 20000
+# median is a consistant estimate of scale s of pareto distribution of shape 1 and scale 2
 
