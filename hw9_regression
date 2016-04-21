@@ -1,4 +1,3 @@
-
 # Student Name: Mo Pei
 # Assignment Name: Homework 9
 
@@ -48,7 +47,7 @@ summary(hb_m.lm)$r.squared
 Illiteracy <- read.csv("C:/Users/peimo/Desktop/MATH 156/Data/Illiteracy.csv")
 
 # (a)
-  
+
 Illit<-Illiteracy$Illit
 Births<-Illiteracy$Births
 plot(Illit,  Births, main="Births and Illit", 
@@ -186,8 +185,8 @@ quantile( beta.boot, c(.025, .975)) #95% confidence interval for correlations
 
 e<-exp(1)
 
-e^(alpha+beta*60)/(1+e^(alpha+beta*60))
-# 0.1104296
+e^(alpha+beta*69)/(1+e^(alpha+beta*69))
+# 0.0911064
 
 n <- nrow(Titanic)
 #Now resample 5000 times to investigate the distribution of estimates
@@ -199,12 +198,11 @@ for (i in 1:N){
   fit.boot<-glm(Survived~Age,data=Titanic.boot,family=binomial)
   alpha.boot[i] <- coef(fit.boot)[1]
   beta.boot[i] <- coef(fit.boot)[2]
-  pPred.boot[i] <-plogis(alpha.boot[i]+beta.boot[i]*60)
+  pPred.boot[i] <-plogis(alpha.boot[i]+beta.boot[i]*69)
   
 }
 
 hist(pPred.boot)   # resembles Figure 9.18
 quantile( pPred.boot, c(.025, .975)) #95% confidence interval for predicted free score
 # 2.5%      97.5% 
-#   0.06301572 0.17180543 
-
+#   0.04500156 0.15990928 
