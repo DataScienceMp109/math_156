@@ -1,0 +1,247 @@
+
+# Assignment Name: hw 10
+# Student Name: Mo Pei
+
+# Problem One
+
+# (a)
+theta <- c(.1, .3, .6, .7, .8) #ranges from 0.0 to 1.0
+#The "Bayesian prior" specifies the probability of each value.
+prior <- c(0.1,0.2,0.3,0.3,0.1); sum(prior) #must sum to 1
+#A broken-line plot of the prior
+plot(theta, prior, type = "b", ylim = c(0, 0.4), ylab = "Probability")
+
+likelihood <- theta^2*(1-theta)^3; likelihood 
+
+P1W2L<-sum(prior* likelihood); P1W2L
+
+posterior <-prior * likelihood/ P1W2L; posterior
+
+sum(posterior)
+
+#theta is a random variable, and its expectation has decreased.
+sum(theta*prior) #prior mean
+sum(theta*posterior) #posterior mean
+
+#Add the new "posterior" distribution to the plot
+lines(theta, posterior, type="b", col = "red")
+
+# (b)
+#Alternative calculation - take the first posterior and add two wins, three losses
+likelihood3 <- theta^3*(1-theta)^7
+#Probability of two wins and three losses
+P2W3L<-sum(posterior* likelihood3)
+#Probability of theta, conditioned on observing two additional wins, three additional losses
+posterior3 <-posterior * likelihood3/ P2W3L
+sum(theta*posterior3) #expectation is same as before
+
+
+plot(theta, posterior, type = "b", ylim = c(0, 1), ylab = "Probability")
+lines(theta, posterior3, type="b", col = "brown")
+
+# (c)
+
+
+likelihood2 <- theta^5*(1-theta)^10; likelihood
+#Probability of three wins and five losses
+P3W5L<-sum(prior* likelihood2); P3W5L #small because it's one of 9 outcomes
+#Probability of theta, conditioned on observing three wins, five losses
+posterior2 <-prior  * likelihood2/ P3W5L; posterior2
+sum(posterior2) #normalization check
+sum(theta*posterior2) #this posterior has an even lower expectation
+
+#Add yet another posterior distribution to the plot
+lines(theta, posterior2, type="b", col = "blue")
+legend("topleft",legend = c("prior", "posterior1(1W2L)", "posterior2(3W5L)"), lty = 1, col = c("black", "red", "blue"))
+
+
+#We should have recalculated the same posterior distribution
+identical(posterior2, posterior3) #why does this fail?
+posterior2- posterior3 # not quite zero because of computer arthmetic
+identical(signif(posterior2), signif( posterior3)) #round to six digits
+
+# Problem Two
+
+# (a) 
+# estimate 
+# Agresti coull interval to construct confidence interval
+theta_hat<-(160+2)/(178+4) 
+theta_hat- 1.96 * ((theta_hat*(1-theta_hat))/(178+4))^0.5
+theta_hat+ 1.96 * ((theta_hat*(1-theta_hat))/(178+4))^0.5
+# We are 95% sure that the true proporation is between 0.8446717 to 0.9355481 
+
+# (b) 
+
+#  mean 0.85 variance 0.0025
+#  use Wolfram alpha
+#  solve[{a/(a+b)=0.85,(a*b)/((a+b)^2*(a+b+1))=0.0025},{a,b}]
+#  a = 42.5, b= 7.5
+Alpha<-42.5+160
+Beta<-7.5+178-160
+
+e<-Alpha/(Alpha+Beta)
+e
+# 0.8881579
+
+qbeta(c(0.025,0.975),Alpha,Beta)
+# 0.844250 0.925627
+
+
+# flat beta
+Alpha<-1+160
+Beta<-1+178-160
+
+e<-Alpha/(Alpha+Beta)
+e
+# 0.8944444
+qbeta(c(0.025,0.975),Alpha,Beta)
+#  0.8457338 0.9348730
+
+# beta(6,4)
+Alpha<-6+160
+Beta<-4+178-160
+
+e<-Alpha/(Alpha+Beta)
+e
+# 0.8829787
+qbeta(c(0.025,0.975),Alpha,Beta)
+#  0.8334713 0.9247833
+
+# (c) 
+# Statistician 1 - mean 0.85 variance 0.0025
+curve(dbeta(x, 42.5, 7.5), from = 0, to = 1, ylim = c(0,17),ylab = "Beta density")
+curve(dbeta(x, 42.5+160, 7.5+178-160),  col = "red", add = TRUE) 
+
+# Statistician 2 - flat prior - beta(1,1)
+curve(dbeta(x, 1, 1), from = 0, to = 1, ylim = c(0,17),ylab = "Beta density")
+curve(dbeta(x, 1+160, 1+178-160),  col = "red", add = TRUE) 
+
+# Statistician 3 - prior Beta(6,4)
+curve(dbeta(x, 6, 4), from = 0, to = 1, ylim = c(0,17),ylab = "Beta density")
+curve(dbeta(x, 6+160, 4+178-160),  col = "red", add = TRUE) 
+
+# (d)
+
+pbeta(0.9,42.5+160, 7.5+178-160)
+# 0.7021431
+pbeta(0.9,1+160,1+178-160)
+# 0.5721971
+pbeta(0.9, 6+160, 4+178-160)
+# 0.7580385
+
+
+# Problem Three
+
+curve(dnorm(x,600,25), xlim = c(300,800))
+# (a)
+#The formula on page 317 (skip the derivation!) gives the posterior variance.
+A<- 60/25^2 # 15 samples with variance assumed to be 8
+A0<- 1/25^2 # inverse variance for prior
+A1<- A0 + A # inverse variance for posterior
+sqrt(1/A1)  #the standard deviation of the mean (posterior)
+
+#Calculation of the posterior mean
+M<- 538 # mean length for sample of 15 fish
+M0 <- 600 #mean for prior
+M1 <- (A0*M0 + A*M)/(A0 + A) #mean for posterior
+
+curve(dnorm(x, M1, 1/sqrt(A1)), ,col = "red", add = TRUE) #posterior
+#For comparison, here is the distribution of the mean with mu = 600, sd = 25
+curve(dnorm(x, 600, 25/sqrt(60)), ,col = "blue", add = TRUE)
+
+
+# (b)
+qnorm(c(.025, .975),M1, 1/sqrt(A1))
+# we are 95% sure the true mean is between 532.7427 and 545.2901
+
+# (c)
+1-pnorm(600,M1, 1/sqrt(A1))
+# 0 chance 
+
+
+# Problem Four
+
+
+
+# Problem Five
+#Math 156 Script 10D-BayesMultiarm.R
+#Last modified: March 17, 2016 by Paul Bamberg
+
+#Topic 1 - trying to identify the best version of a Web site
+
+#Here is the number of visits for six different versions of the site
+n<-c(551,602,623,496,588,589) # visits to 6 sites
+X<-c(176,182,188,145,173,190) #purchases from those sites
+
+#For each site, we can get parameters for a probability of purchase
+#We are using a "noninformative" prior where alpha and beta are tiny and equal
+
+alpha<- X # parameters for posterior beta distributions
+beta<- n-X # parameters for posterior beta distributions
+
+#Now we simulate 10000 random selections of the parameter values
+N <- 10^5  #replications
+theta<- matrix(0,0, nrow = N, ncol = 6) #10000 rows of 6 zeroes
+for (j in 1:6) {
+  theta[ ,j] <- rbeta(N, alpha[j], beta[j]) #fill in column j
+}
+head(theta)
+#Each row contains a probability of purchase for each version.
+
+#Now, for each row, find which site has the highest probability of purchase.
+probBest <- numeric(6) #vector for results
+best <- apply(theta, 1, max) # 1 means apply max over rows
+for (j in 1:6) {
+  probBest[j] = mean(theta[ ,j] == best)
+}
+probBest #versions 2, 3, 4, and 5 rarely produce the best results
+# 0.34097 0.08667 0.08038 0.04336 0.04136 0.40726
+
+# The worst is number four and five 0.04336 and 0.04136
+# Salvador Perez, 145 hits in 496 at bats. 0.04336 chance of being top hitter
+# Jean Segura, 173 hits in 588 at bats. 0.04136 chance of being top hitter 
+# We do not need to hire them
+
+
+
+#Plot column 1 against column 6
+plot(theta[1:10^4,1], theta[1:10^4,6], pch = ".")
+abline(0,1, col = "red") #on this line, 1 and 3 are tied
+text(.28, .38, substitute(theta[6] > theta[1]))
+text(.38, .28, substitute(theta[1] > theta[6])) #typo in book
+
+#Do the same thing with 1 and 3
+plot(theta[1:10^4,1], theta[1:10^4,3], pch = ".")
+abline(0,1, col = "red")
+text(.35, .25, substitute(theta[1] > theta[3]))
+text(.28, .35, substitute(theta[3] > theta[1]))
+#This graph makes a strong case for abandoning site 2
+
+#Topic 2 - getting the same results using a binomial simulation
+
+#Here is the number of visits for six different versions of the site
+n<-c(551,602,623,496,588,589) # visits to 6 sites
+X<-c(176,182,188,145,173,190) #purchases from those sites
+p<-X/n #proportion of purchase from each site
+
+#Now we simulate 10000 cases of 1900 visits to each site
+N <- 10^5  #replications
+sales<- matrix(0,0, nrow = N, ncol = 6) #10000 rows of 6 zeroes
+for (j in 1:6) {
+  sales[ ,j] <- rbinom(N, 1900, p[j]) #fill in column j
+}
+head(sales)
+#Each row contains the number of purchases for each version.
+
+#Now, for each row, find which site has the highest number of purchases.
+numTop <- numeric(6) #vector for results
+best <- apply(sales, 1, max) # 1 means apply max over rows
+#In this case, there may be a tie for the most purchases.
+for (j in 1:6) {
+  numTop[j] = mean(sales[ ,j] == best) 
+}
+numTop; sum(numTop)  #sum exceeds 1 because of ties
+probTop<-numTop/sum(numTop); round(probTop,5)
+probBest   #for comparison
+#The Bayesian approach gives the same result as brute-force simulation
+
