@@ -2,6 +2,8 @@
 # Assignment Name: hw 10
 # Student Name: Mo Pei
 
+
+
 # Problem One
 
 # (a)
@@ -59,6 +61,9 @@ legend("topleft",legend = c("prior", "posterior1(1W2L)", "posterior2(3W5L)"), lt
 identical(posterior2, posterior3) #why does this fail?
 posterior2- posterior3 # not quite zero because of computer arthmetic
 identical(signif(posterior2), signif( posterior3)) #round to six digits
+
+
+
 
 # Problem Two
 
@@ -130,6 +135,8 @@ pbeta(0.9, 6+160, 4+178-160)
 # 0.7580385
 
 
+
+
 # Problem Three
 
 curve(dnorm(x,600,25), xlim = c(300,800))
@@ -145,9 +152,9 @@ M<- 538 # mean length for sample of 15 fish
 M0 <- 600 #mean for prior
 M1 <- (A0*M0 + A*M)/(A0 + A) #mean for posterior
 
-curve(dnorm(x, M1, 1/sqrt(A1)), ,col = "red", add = TRUE) #posterior
+curve(dnorm(x, M1, 1/sqrt(A1)),col = "red", add = TRUE) #posterior
 #For comparison, here is the distribution of the mean with mu = 600, sd = 25
-curve(dnorm(x, 600, 25/sqrt(60)), ,col = "blue", add = TRUE)
+curve(dnorm(x, 600, 25/sqrt(60)) ,col = "blue", add = TRUE)
 
 
 # (b)
@@ -159,7 +166,93 @@ qnorm(c(.025, .975),M1, 1/sqrt(A1))
 # 0 chance 
 
 
+
+
 # Problem Four
+
+# (a)
+
+# x~poisson(theta)
+# pmf = e^theta * (theta^x/x!)
+# likelihood(theta|x1,x2,,,xn) = pmf(x1|theta) * pmf(x1|theta) * pmf(x2|theta),,,,,,*pmf(xn|theta)
+# likelihood(theta|x1,x2,,,xn) = e^(-n*theta) *(theta^sum(i)/pai(i!))
+
+# (b)
+
+# theta ~ gamma(r,lambda)
+
+# p(theta) = (Beta^r/gamma function(r)) * theta^(r-1) * e^(-beta*theta)
+# posterior  proportional to prior * likelihood
+# posterior(theta/x1,x2,,,,xn) proportional to p(theta)* likelihood(theta|x1,x2,,,xn)
+# posterior(theta/x1,x2,,,,xn) proportional to (Beta^r/gamma function(r)) * theta^(r-1) * e^(-beta*theta)* e^(-n*theta) *(theta^sum(i)/pai(i!))
+
+# posterior(theta/x1,x2,,,,xn) proportional to theta^(sum(xi)+r-1))*e^(-(n+lambda)*theta)
+
+
+# (c)
+
+# PI(theta|x) is gamma(sum(x)+i,n+lambda)  the prior and posterior are conjugate distributions
+
+# (d)
+
+x_s<-c(6,7,9,9,16)
+alpha_g<-sum(x_s)+15
+beta_g<-5+3
+
+curve(dgamma(x,alpha_g,beta_g),from = 0, to = 20,col = "red",probablity=TRUE)
+
+mean_g<-alpha_g/beta_g
+mean_g
+# 7.75
+
+# (e)
+
+qgamma(c(0.025,0.975),alpha_g,beta_g)
+# we are 95 % sure that the true theta is between 5.941881 and 9.794631 
+# based on data we have 6,7,9,9,16
+
+# (f)
+
+# prior distribution has mean 8 and variance 4, and
+# you assume that it is a gamma distribution
+
+#  mean 8 variance 4
+#  use Wolfram alpha
+#  solve[{a/b=8,a/b^2=4},{a,b}]
+#  a = 16, b= 2
+
+# prior density
+curve(dgamma(x,16,2),from = 0, to = 20,ylim=c(0,0.5),col = "blue",probablity=TRUE)
+
+mean_g<-16/2
+mean_g
+# 8
+
+# prior density credible interval
+qgamma(c(0.025,0.975),16,2)
+# we are 95 % sure that the true theta is between 4.572691 and 12.370109
+# based on data we have 6,7,9,9,16
+
+x_s<-c(6,7,9,9,16)
+alpha_g<-sum(x_s)+16
+beta_g<-5+2
+
+
+# posterior density
+curve(dgamma(x,alpha_g,beta_g),from = 0, to = 20,col = "red",probablity=TRUE,add=TRUE)
+
+mean_g<-alpha_g/beta_g
+mean_g
+# 9
+
+# posterior density credible interval
+qgamma(c(0.025,0.975),alpha_g,beta_g)
+# we are 95 % sure that the true theta is between 6.915847 and 11.354457
+# based on data we have 6,7,9,9,16
+# also, compared with prior density, posterior density is narrower 
+
+legend("topleft",legend = c("prior", "posterior"), lty = 1, col = c("blue", "red"))
+
 
 
 
@@ -244,4 +337,3 @@ numTop; sum(numTop)  #sum exceeds 1 because of ties
 probTop<-numTop/sum(numTop); round(probTop,5)
 probBest   #for comparison
 #The Bayesian approach gives the same result as brute-force simulation
-
