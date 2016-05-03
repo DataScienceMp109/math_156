@@ -587,4 +587,40 @@ summary(cus_m)
 # 
 # Number of Fisher Scoring iterations: 9
 
+rmse <- function(error)
+{
+  sqrt(mean(error^2))
+}
+
+error <- cus_m$residuals  # same as data$Y - predictedY
+predictionRMSE <- rmse(error)   # 5.703778
+predictionRMSE
+# 2.116948
+
+
+install.packages("e1071")
+library(e1071)
+
+
+cus_m<-svm(Buy~Income+Is.Female+
+             +Is.Married
+           +Has.College  
+           +Is.Professional	
+           +Is.Retired	
+           +Unemployed	
+           +Residence.Length	
+           +Dual.Income	
+           +Minors	
+           +Own	
+           +House	
+           +White	
+           +English	
+           +Prev.Child.Mag	
+           +Prev.Parent.Mag,data=KidCreative,family=binomial)
+
+error <- cus_m$residuals  # same as data$Y - predictedY
+predictionRMSE <- rmse(error)   # 5.703778
+predictionRMSE
+# 0.2060878
+
 
