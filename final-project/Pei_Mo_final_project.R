@@ -526,26 +526,28 @@ par(mfrow = c(1, 1))
 
 
 
-# (c) Logistic regression
+# (c) Logistic regression, SVM, KNN
 
 KidCreative <- read.csv("C:/Users/peimo/Desktop/MATH 156/Final_Project/Data/KidCreative.csv")
 
 cus_m<-glm(Buy~Income+Is.Female+
-      +Is.Married
-      +Has.College	
-    +Is.Professional	
-    +Is.Retired	
-    +Unemployed	
-    +Residence.Length	
-    +Dual.Income	
-    +Minors	
-    +Own	
-    +House	
-    +White	
-    +English	
-    +Prev.Child.Mag	
-    +Prev.Parent.Mag,data=KidCreative,family=binomial)
+             +Is.Married
+           +Has.College	
+           +Is.Professional	
+           +Is.Retired	
+           +Unemployed	
+           +Residence.Length	
+           +Dual.Income	
+           +Minors	
+           +Own	
+           +House	
+           +White	
+           +English	
+           +Prev.Child.Mag	
+           +Prev.Parent.Mag,data=KidCreative,family=binomial)
 summary(cus_m)
+
+ROC_curve(cus_m,KidCreative,KidCreative$Buy)
 
 # Call:
 #   glm(formula = Buy ~ Income + Is.Female + +Is.Married + Has.College + 
@@ -587,6 +589,16 @@ summary(cus_m)
 # 
 # Number of Fisher Scoring iterations: 9
 
+
+
+
+
+
+# SVM KNN Cross validation
+
+
+
+
 rmse <- function(error)
 {
   sqrt(mean(error^2))
@@ -624,3 +636,120 @@ predictionRMSE
 # 0.2060878
 
 
+
+
+
+KidCreative[,"Obs.No."]<- NULL
+
+
+install.packages("caret")
+install.packages("ordinal")
+# Use the caret R package to split the data into a training set with 80% of data 
+# and a test set with the remaing 20%. Then use glm() to build a model. What is the accuracy?
+
+## put your code here
+
+library(caret)
+library(ordinal)
+
+inTrain <- createDataPartition(y = KidCreative$Buy, p = 0.8)
+
+KidCreative<-data.frame(KidCreative)
+
+train_set <- slice(KidCreative, inTrain$Resample1)
+test_set <- slice(KidCreative, -inTrain$Resample1)
+
+fit <- glm(Buy~., data=train_set, family="binomial")
+pred <- predict(fit, newdata = test_set, type = "response")
+tab <- table(pred = round(pred), truth = test_set$Buy)
+confusionMatrix(tab)
+
+
+
+# We see that obtain a very high accuracy, but note that this is a random variable 
+# due to the random split of our data. 
+# Try 10 new random splits and report on how much our accuracy changes.
+
+acc <- sapply(1:10,function(i){
+  inTrain <- createDataPartition(KidCreative$Buy,
+                                 p=0.8)
+  train_set <- slice(KidCreative, inTrain$Resample1)
+  test_set <- slice(KidCreative, -inTrain$Resample1)
+  fit <- glm(Buy~., data=train_set, family="binomial")
+  pred <- predict(fit, newdata = test_set, type = "response")
+  tab <- table(pred = round(pred), 
+               truth = test_set$Buy)
+  confusionMatrix(tab)$overall["Accuracy"]
+})
+mean(acc)
+# 0.9149254
+sd(acc)
+# 0.0228531
+
+
+# Compare your glm() model to a knn(). Use the train() function to run 10 
+# cross validations leaving out 20% of the data. Plot your results.
+
+
+control <- trainControl(method='cv', number=10, p=.8)
+dat <- mutate(KidCreative, y=factor(KidCreative$Buy))
+res <- train(Buy~ .,
+             data = trainControl,
+             method = "knn",
+             trControl = control,
+             tuneLength = 1, # How fine a mesh to go on grid
+             tuneGrid=data.frame(k=seq(1,25,2)),
+             metric="Accuracy")
+res$results %>% 
+  ggplot(aes(k, Accuracy, ymin= Accuracy - AccuracySD, 
+             ymax = Accuracy + AccuracySD)) +
+  geom_point() + geom_errorbar()
+
+
+
+install.packages("ROCR")
+library(ROCR)
+
+
+# Orignial roc curve
+prob <- predict(fit, newdata=test_set, type="response")
+pred <- prediction(prob, test_set$Buy)
+perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+auc <- performance(pred, measure = "auc")
+auc <- auc@y.values[[1]]
+
+roc.data <- data.frame(fpr=unlist(perf@x.values),
+                       tpr=unlist(perf@y.values),
+                       model="GLM")
+
+ggplot(roc.data, aes(x=fpr, ymin=0, ymax=tpr)) +
+  geom_ribbon(alpha=0.2) +
+  geom_line(aes(y=tpr)) +
+  ggtitle(paste0("ROC Curve w/ AUC=", auc))
+
+
+
+ROC_curve <- function(model,t_set,resp)
+{
+  prob <- predict(model, newdata=t_set, type="response")
+  pred <- prediction(prob, resp)
+  perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+  auc <- performance(pred, measure = "auc")
+  auc <- auc@y.values[[1]]
+  
+  roc.data <- data.frame(fpr=unlist(perf@x.values),
+                         tpr=unlist(perf@y.values),
+                         model="GLM")
+  
+  ggplot(roc.data, aes(x=fpr, ymin=0, ymax=tpr)) +
+    geom_ribbon(alpha=0.2) +
+    geom_line(aes(y=tpr)) +
+    ggtitle(paste0("ROC Curve w/ AUC=", auc))
+}
+
+ROC_curve(fit,test_set,test_set$Buy)
+
+
+
+
+# (3) bayesian statistics
