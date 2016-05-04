@@ -2,9 +2,29 @@
 #Class name: Spring 2016, MATH 156, Harvard University 
 #Student Name: Mo Pei
 
+install.packages("dplyr")
+install.packages("caret")
+install.packages("ordinal")
+install.packages("e1071")
+install.packages("ROCR")
+install.packages("TeachingDemos")
+install.packages("visreg")
+install.packages("influence.ME")
 install.packages("mosaic")
 install.packages("mosaicData")
 install.packages("Lock5Data")
+install.packages("GGally")
+
+library(GGally)
+library(dplyr)
+library(caret)
+library(ordinal)
+library(e1071)
+library(ROCR)
+library(TeachingDemos)
+library(splines)
+require(visreg)
+library(lme4)
 library(mosaic)
 library(mosaicData)
 library(Lock5Data)
@@ -59,9 +79,9 @@ PS_t<-subset(Salaries,select=salary,subset=(discipline=='A'&rank=='Prof'))
 PS_a<-subset(Salaries,select=salary,subset=(discipline=='B'&rank=='Prof'))
 
 nrow(PS_t)
-# 131
+
 nrow(PS_a)
-# 135
+
 
 # randomly choose 100 samples each of two groups
 choose_range_t<-c(1:nrow(PS_t))
@@ -75,9 +95,7 @@ sample_PS_a<-PS_a[sample_index,]
 sample_salaries<-data.frame(sample_PS_t,sample_PS_a)
 colnames(sample_salaries) <- c("t","a")  
 
-plot(sample_salaries$t,sample_salaries$a,xlab="salary of theoretical type professors"
-     ,ylab="salary of theoretical type professors")
-abline(a=0,b=1,col='red')
+
 
 #Two sample T-Test to test if mean of theoretical professors
 #is different from B "applied" departments professors.
@@ -89,30 +107,23 @@ qqline(sample_salaries$t)
 
 qqnorm(sample_salaries$a)
 qqline(sample_salaries$a)
-# The standard deviation of the populations should be equal 
+# The variance of the two groups should be similar
 hist(sample_salaries$t, probability = TRUE)
 curve(dnorm(x, mean=mean(sample_salaries$t),sd=sd(sample_salaries$t))
       , col = "red", add= TRUE)
 hist(sample_salaries$a, probability = TRUE)
 curve(dnorm(x, mean=mean(sample_salaries$a),sd=sd(sample_salaries$a))
       , col = "red", add= TRUE)
-# Samples have to be randomly drawn independent of each other. 
+# Each professors salary is independent to each other 
+
+# Samples have to be randomly selected. 
 
 t.test(sample_salaries$t,sample_salaries$a,alt="greater")
 
-# Welch Two Sample t-test
-# 
-# data:  sample_salaries$t and sample_salaries$a
-# t = -2.786, df = 179.59, p-value = 0.997
-# alternative hypothesis: true difference in means is greater than 0
-# 95 percent confidence interval:
-#   -17249.93       Inf
-# sample estimates:
-#   mean of x mean of y 
-# 121678.3  132503.7 
 
 
-#Conclusion: I do not find significant evidence support there is a 
+#Conclusion: with df = 77.994, p-value = 0.9946
+# so there is no significant evidence support there is a 
 # salaryy mean difference between  of theoretical professors
 # and "applied" departments professors
 
@@ -132,9 +143,9 @@ PS_a<-subset(Salaries,select=salary,
              subset=(sex=='Female'&rank=='Prof')|(sex=='Female'&rank=='AssocProf'))
 
 nrow(PS_t)
-# 248
+
 nrow(PS_a)
-# 18
+
 
 # randomly choose 100 samples each of two groups
 choose_range_t<-c(1:nrow(PS_t))
@@ -148,9 +159,7 @@ sample_PS_a<-PS_a
 sample_salaries<-data.frame(sample_PS_t,sample_PS_a)
 colnames(sample_salaries) <- c("t","a")  
 
-plot(sample_salaries$t,sample_salaries$a,xlab="salary of theoretical type professors"
-     ,ylab="salary of theoretical type professors")
-abline(a=0,b=1,col='red')
+
 
 #Two sample T-Test to test if mean of theoretical professors
 #is different from B "applied" departments professors.
@@ -159,8 +168,6 @@ abline(a=0,b=1,col='red')
 # Samples have to be randomly drawn independent of each other.
 # I assume the salary of different professors is independent of each other
 
-# Randomization Condition 
-# The data must be sampled randomly. 
 
 # The populations from which the samples have been drawn should be normal
 qqnorm(sample_salaries$t)
@@ -179,19 +186,9 @@ curve(dnorm(x, mean=mean(sample_salaries$a),sd=sd(sample_salaries$a))
 
 t.test(sample_salaries$t,sample_salaries$a,alt="greater")
 
-# Welch Two Sample t-test
-# 
-# data:  sample_salaries$t and sample_salaries$a
-# t = 2.2889, df = 53.296, p-value = 0.01304
-# alternative hypothesis: true difference in means is greater than 0
-# 95 percent confidence interval:
-#   4337.106      Inf
-# sample estimates:
-#   mean of x mean of y 
-# 126163.1  110019.5 
 
 
-#Conclusion: I do find significant (p-value = 0.01304)evidence support there is a 
+#Conclusion: there is significant (p-value = 0.01304)evidence support there is a 
 # salaryy mean difference between  of male professors
 # and female professors
 
@@ -228,21 +225,17 @@ nrow(PS_m)
 plot(x =c(110000,145000), y = c(1,100), type = "n", xlab = "", ylab = "") #blank plot
 
 mean(PS_m$salary); var(PS_m$salary)
-#Use Student's t to get a confidence interval
+#Use Student's t(theoritical) to get a confidence interval
 mean(PS_m$salary) + qt(0.025, 247) * sd(PS_m$salary)/sqrt(248); mean(PS_m$salary) + qt(0.975, 247) * sd(PS_m$salary)/sqrt(248)
 #Run the automated t test
-t.test(PS_m$salary, conf.level = .95)    #it gives the same numbers.
+t.test(PS_m$salary, conf.level = .95)    
 
-# One Sample t-test
-# 
-# data:  PS_m$salary
-# t = 70.955, df = 247, p-value < 2.2e-16
-# alternative hypothesis: true mean is not equal to 0
-# 95 percent confidence interval:
-#   123592.1 130649.5
-# sample estimates:
-#   mean of x 
-# 127120.8 
+#We are 95% percent sure that
+#the true mean of mean of salary of male full professor 
+#is between 123592.and 1 130649.5 
+
+#simulation t confidence interval
+
 
 means <- numeric(1000);lower = numeric(1000); upper = numeric(1000)
 for (i in 1:1000) {
@@ -266,19 +259,27 @@ sum(mean(PS_m$salary)> upper)/1000 #what fraction of the time did Student's conf
 sum(means < qnt[1])/1000 #what fraction of the time did lower quantile lie above true mean?
 sum(mean(PS_m$salary) < lower)/1000 #what fraction of the time did Student's confidence interval lie above the true mean?
 
+# The reason why the percentage of points lower then lower .25 bound is  
+# the two original samples are not strictly normaly distributed. 
 # So we are 95 percent sure that the true mean of salary of male full professor 
-# is between 123592.1 and 130649.5.
+# is between 120010.0 and 133831.5 
 
 
-#(2) Regression analysis 
 
-# (a) Simple linear regression
 
+# Simple linear regression
+
+# I am interested to check if there is a relationship between 
+# professors' salary and experince 
+
+
+#I especially choose professors and Assocociate professors
 yrs_since_phd<-subset(Salaries,select=yrs.since.phd,subset=((rank=='Prof'))|
                         ((rank=='AssocProf')))
 salary<-subset(Salaries,select=salary,subset=((rank=='Prof'))|
                  ((rank=='AssocProf')))
 
+#scaled by divided by 1000 
 scale_salary<-salary/1000
 
 yrs_phd_salary<-data.frame(yrs_since_phd,scale_salary)
@@ -298,47 +299,26 @@ abline(v = mean(yrs_phd_salary$years.since.Phd), col = "red")
 # quadrant, that covriance of years since Phd and salary should be positive 
 
 cor.test(yrs_phd_salary$years.since.Phd,yrs_phd_salary$scaled.salary)
-# Pearson's product-moment correlation
-# 
-# data:  yrs_since_phd and stdize_salary
-# t = 9.1775, df = 395, p-value < 2.2e-16
-# alternative hypothesis: true correlation is not equal to 0
-# 95 percent confidence interval:
-# 0.3346160 0.4971402
-# sample estimates:
-# cor 
-# 0.4192311 
-
-#Also, besides the observation from plot,
-#we can calculate the covariance and gives correlation co efficient of 0.4192311
-#it means years since Phd and salary are positively correlated
+# from Pearson's product-moment correlation
+# I can see there is a positive correlation
+# betwween professors' salary and experince. 
 
 
 hb_m.lm <- lm(scaled.salary~ years.since.Phd,data=yrs_phd_salary);hb_m.lm
 
 
-
+#  Appropriate use of novel statistics (eg, trimmed mean, skewness, 
+#  median absolutedeviation, least-absolute-error regression, ratios, 
+#  order statistics, R squared) 
 summary(hb_m.lm)
-# Call:
-#   lm(formula = scale_salary ~ yrs_since_phd)
-# 
-# Residuals:
-#   Min      1Q  Median      3Q     Max 
-# -84.171 -19.432  -2.858  16.086 102.383 
-# 
-# Coefficients:
-#               Estimate Std. Error   t value Pr(>|t|)    
-# (Intercept)    91.7187     2.7658  33.162   <2e-16 ***
-#   yrs_since_phd   0.9853     0.1074   9.177   <2e-16 ***
-#   ---
-#   Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-# 
-# Residual standard error: 27.53 on 395 degrees of freedom
-# Multiple R-squared:  0.1758,  Adjusted R-squared:  0.1737 
-# F-statistic: 84.23 on 1 and 395 DF,  p-value: < 2.2e-16
+# the inference of beta, I find years.since.Phd has p value of 0.0837
+# and has coefficient of 0.6555, that means one addtional years 
+# there is associate 0.6555 * 1000 salary increase
+
 
 # simple linear regression assumptions verification
-
+# A graphical display unlike one presented in the textbook or 
+# course scripts
 par(mfrow = c(2, 2))
 plot(hb_m.lm)
 par(mfrow = c(1, 1))
@@ -376,28 +356,12 @@ confint(hb_m.lm, 'years.since.Phd', level=0.95)
 #    2.5 %    97.5 %
 #   years.since.Phd -0.6526206 0.8834089
 
-summary(hb_m.lm)
-
-
-# Residuals:
-#   Min      1Q  Median      3Q     Max 
-# -20.184  -9.385  -1.588   9.856  25.262 
-# 
-# Coefficients:
-#                 Estimate Std. Error t value Pr(>|t|)    
-# (Intercept)     104.20025    1.88648   55.23  < 2e-16 ***
-#   years.since.Phd   0.23612    0.07401    3.19  0.00165 ** 
-#   ---
-#   Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-# 
-# Residual standard error: 11.65 on 198 degrees of freedom
-# Multiple R-squared:  0.04889,	Adjusted R-squared:  0.04409 
-# F-statistic: 10.18 on 1 and 198 DF,  p-value: 0.001653
 
 par(mfrow = c(2, 2))
 plot(hb_m.lm)
 par(mfrow = c(1, 1))
 
+summary(hb_m.lm)
 
 # A scatter plot with regression line
 plot(yrs_phd_salary$years.since.Phd,yrs_phd_salary$scaled.salary
@@ -408,115 +372,228 @@ abline(a= 111.818,b=0.329,col='red')
 
 
 #leverage points
-install.packages("influence.ME")
-library(lme4)
+#there might have some leverage points to drag
+#the regression line
 cooks_distence<-cooks.distance(hb_m.lm)
 plot(cooks_distence)
 
 
-#Prediction
+#Prediction of a professor who has 28 years working experince
 mass <- data.frame(years.since.Phd=28)
 confint_mass <- predict(hb_m.lm, mass, interval=c("confidence"))
 print(confint_mass)
+# the confidence interval of mean salary is below
+# fit      lwr      upr
+# 1 120.9482 114.2686 127.6278
 predint_mass <- predict(hb_m.lm, mass, interval=c("prediction"))
 print(predint_mass)
+# # the prediction interval of  salary is below 
+# fit      lwr      upr
+# 1 120.9482 76.02208 165.8743
 
-install.packages("visreg")
-require(visreg)
+# Beta confidence interval & prediction interval
 visreg(hb_m.lm,main='confidence interval & prediction interval')
 
 
 
-# (b) Multiple linear regression 
+#(3) bayesian statistics
+
+# bayesian statistics
+# Bayesian prior updated by data
+
+# At british primier soccer league, leicester city
+# just won the first ever championship in the club 
+# history since 1884. Who can imagine that last season
+# leicester city was one of the worst team in premier league
+# they lost more of the games and almost was degraded to 
+# championship league(2rd league in England)
+# I got some match data of leicester city since last year august. 
+# let see how their odds changed!
+
+
+# (a)
+theta <- seq(0,1,by=.1) #ranges from 0.0 to 1.0
+#The "Bayesian prior" specifies the probability of each value.
+prior <- c(0.9,0.05,0.03,0.01,0.005,0.005,0,0,0,0，0); sum(prior) #must sum to 1
+#A broken-line plot of the prior
+plot(theta, prior, type = "b", ylim = c(0, 1), ylab = "Probability")
+
+likelihood <- theta^3*(1-theta)^2; likelihood 
+P1W2L<-sum(prior* likelihood); P1W2L
+posterior <-prior * likelihood/ P1W2L; posterior
+sum(posterior)
+sum(theta*prior) #prior mean
+sum(theta*posterior) #posterior mean
+
+#Add the new "posterior" distribution to the plot
+lines(theta, posterior, type="b", col = "red")
+
+
+
+likelihood2 <- theta^5*(1-theta)^0
+P2W3L<-sum(posterior* likelihood2)
+posterior2 <-posterior * likelihood3/ P2W3L
+sum(theta*posterior2) #expectation is same as before
+lines(theta, posterior2, type="b", col = "blue")
+
+likelihood3 <- theta^7*(1-theta)^0
+P2W3L<-sum(posterior2* likelihood3)
+posterior3 <-posterior2 * likelihood3/ P2W3L
+sum(theta*posterior3) #expectation is same as before
+lines(theta, posterior3, type="b", col = "brown")
+
+likelihood4 <- theta^8*(1-theta)^2
+P2W3L<-sum(posterior3* likelihood4)
+posterior4 <-posterior3 * likelihood4/ P2W3L
+sum(theta*posterior4) #expectation is same as before
+lines(theta, posterior4, type="b", col = "green")
+
+#I can see that their probalilty of wining the premier league 
+#championship has been greatly increased! 
+
+
+# (b)
+# Comparison of analysis by Bayesian and frequentist approaches
+# Appropriate use of bootstrap techniques
+
+#  Jobs by designated education level of occupations, May 2013
+#  reference(http://www.bls.gov/careeroutlook/2014/article/education-level-and-jobs.htm) 
+#  46 of the 200 people who have bachelor degree or above 
+
+
+# bootstrap confidence interval
+graduate <-c(rep(0,154),rep(1,46)) 
+N<-10^4; family.boot <- numeric(N)
+for (i in 1:N) {
+  fam.sample <- sample(graduate, replace = TRUE)
+  family.boot[i] <- sum(fam.sample)
+}
+hist(family.boot, breaks = "FD", main= "Bootstrap distribution")
+#Extract a 95% bootstrap percentile confidence interval - proportion who responded yes
+quantile(family.boot, c(.025, .975))/178
+# 2.5%     97.5% 
+#   0.1966292 0.3258427 
+
+
+# Note that part (a) is fre- quentist, not Bayesian.  
+# Then, i will apply Bayesian method to build a confidence interval
+# to estimate mean of theta
+# Find the estimates for theata (posterior means) and 95% credible intervals
+# "noninformative" prior 
+alpha.posterior.stat1 <- (46)
+beta.posterior.stat1 <- (200-46)
+# Expected theta - E[X] = alpha/(alpha + Beta)
+theta.expected <- alpha.posterior.stat1/(alpha.posterior.stat1 + beta.posterior.stat1); theta.expected
+#95% credible intervals
+qbeta(c(.025, .975),alpha.posterior.stat1, beta.posterior.stat1)
+# 0.1744818 0.2906311
+
+#Flat prior 
+alpha.posterior.stat2 <- (1+46)
+beta.posterior.stat2 <- (1+200-46)
+# Expected theta - E[X] = alpha/(alpha + Beta)
+theta.expected <- alpha.posterior.stat2/(alpha.posterior.stat2 + beta.posterior.stat2); theta.expected
+#95% credible intervals
+qbeta(c(.025, .975),alpha.posterior.stat2, beta.posterior.stat2)
+# 0.1771555 0.2932033
+
+
+
+
+
+# (4) Multiple linear regression 
+
+# DATE: Time period (1-30)
+# CONSUME: Ice cream consumption in pints per capita
+# PRICE: Per pint price of ice cream in dollars
+# INC: Weekly family income in dollars
+# TEMP: Mean temperature in degrees F
+
+# I investigate the factors affecting Ice cream consumption
+# Also, is there any interactions among those factors
 
 iceCreamConsumption <- read.table("C:/Users/peimo/Desktop/MATH 156/Final_Project/Data/iceCreamConsumption.csv", header=TRUE, quote="\"")
 
 #remove null missing value
 iceCreamConsumption<-subset(iceCreamConsumption,subset=Lag.temp!='?')
 
-m_ic<-lm(IC~price + income, data=iceCreamConsumption)
-summary(m_ic)
-
-install.packages("TeachingDemos")
-library(TeachingDemos)
-library(splines)
-Predict.Plot(iceCreamConsumption$IC ~ iceCreamConsumption$price+iceCreamConsumption$income)
 
 m_ic<-lm(IC~price + temp+income, data=iceCreamConsumption)
 summary(m_ic)
 
-# Call:
-#   lm(formula = IC ~ price + income, data = iceCreamConsumption)
-# 
-# Residuals:
-#   Min        1Q    Median        3Q       Max 
-# -0.098772 -0.034685 -0.009381  0.034351  0.117713 
-# 
-# Coefficients:
-#   Estimate Std. Error t value Pr(>|t|)
-# (Intercept)  0.5777990  0.4161919   1.388    0.177
-# price       -0.6669640  1.3804937  -0.483    0.633
-# income      -0.0004845  0.0017534  -0.276    0.784
-# 
-# Residual standard error: 0.05809 on 26 degrees of freedom
-# Multiple R-squared:  0.01126,  Adjusted R-squared:  -0.0648 
-# F-statistic: 0.148 on 2 and 26 DF,  p-value: 0.8632
+# R-squared:  0.6948,  Adjusted R-squared:  0.6582 
+# with relative high r-squared and Adjusted R-squared,
+# the model looks good!
+
+# verfiy assumptions
+# I assume each data is randomly selected
+# each data is indepent to each other
+# I can see from following plots, residual is rondomly located
+# so it meets equal variance assumtion
+# from qq plot, the data is approximately normaly distributed
 
 par(mfrow = c(2, 2))
 plot(hb_m.lm)
 par(mfrow = c(1, 1))
 
+
+# detect if there is interaction tearm 
+# I suspect price and income interactoin term
 m_ic<-lm(IC~price + temp+income+price*income, data=iceCreamConsumption)
 summary(m_ic)
 
-Call:
-  lm(formula = IC ~ price + temp + income + price * income, data = iceCreamConsumption)
+# I can see ineractin term price:income is signficant 
+# with p value of 0.0491.  
+# I can see that after adding interaction term the r squre increases 
+# also adjusted r squre increases
+# before adding interaction term
+# R-squared:  0.6948,  Adjusted R-squared:  0.6582 
+# after adding interaction term
+# R-squared:  0.7411,  Adjusted R-squared:  0.698
 
-# Residuals:
-#   Min        1Q    Median        3Q       Max 
-# -0.057528 -0.016359 -0.000848  0.016866  0.071892 
-# 
-# Coefficients:
-#   Estimate Std. Error t value Pr(>|t|)    
-# (Intercept)  -6.3298130  3.1053503  -2.038   0.0527 .  
-# price        23.3540200 11.4796351   2.034   0.0531 .  
-# temp          0.0028231  0.0004171   6.769 5.31e-07 ***
-#   income        0.0780758  0.0364267   2.143   0.0424 *  
-#   price:income -0.2786003  0.1344397  -2.072   0.0491 *  
-#   ---
-#   Signif. codes:  0 ?**?0.001 ?*?0.01 ??0.05 ??0.1 ??1
-# 
-# Residual standard error: 0.03094 on 24 degrees of freedom
-# Multiple R-squared:  0.7411,  Adjusted R-squared:  0.698 
+#overall model: Multiple R-squared:  0.7411,  Adjusted R-squared:  0.698 
 # F-statistic: 17.18 on 4 and 24 DF,  p-value: 8.968e-07
+# the model is significant
+
+# t= 2.034 and p value is 0.0531 
+# and so we reject null hypothesis. There is relationship between 
+# CreamConsum and price. After accounting for other fators.
+
+# t= 6.769 and p value is 5.31e-07 
+# and so we reject null hypothesis. There is relationship between 
+# CreamConsum and temperature. After accounting for other fators.
+
+# t= 2.143 and p value is 0.0424
+# and so we reject null hypothesis. There is relationship between 
+# CreamConsum and income After accounting for other fators.
+
+# t= -2.072 and p value is 0.0491
+# and so we reject null hypothesis. There is relationship between 
+# CreamConsum and price:income After accounting for other fators.
 
 par(mfrow = c(2, 2))
 plot(hb_m.lm)
 par(mfrow = c(1, 1))
 
-vif(m_ic)
-# price         temp       income price:income 
-# 244.51895      1.33091   1526.23069   1714.78293 
 
-install.packages("GGally")
-library(GGally)
+# check Multicollinarity
+# When some of your predictor variables are correlated
+
+vif(m_ic)
 ggpairs(iceCreamConsumption[,1:4])
 cor(iceCreamConsumption[,2:4])
-
 pairs(iris[,1:4])
 
 
-#Prediction
+#Prediction price=0.23,temp=50, income=50, price_income=50
 mass <- data.frame(price=0.23,temp=50, income=50, price_income=50)
 confint_mass <- predict(m_ic, mass, interval=c("confidence"))
 print(confint_mass)
-# fit        lwr      upr
-# 1 -0.1173488 -0.5319696 0.297272
+
 
 predint_mass <- predict(m_ic, mass, interval=c("prediction"))
 print(predint_mass)
-# fit       lwr       upr
-# 1 -0.1173488 -0.536858 0.3021603
+
 
 par(mfrow = c(2, 2))
 visreg(m_ic,main='confidence interval & prediction interval')
@@ -528,206 +605,53 @@ par(mfrow = c(1, 1))
 
 # (c) Logistic regression, SVM, KNN
 
+# the data is from a website.
+# about customer's information and if they buy from the site or not
+# i want to use logistic regressino and other machine learning models
+# to make a good classifier to help marketing team to target certain
+# customers
+
+# our strategy is to send right customers's emails and coupons 
+# the worst situation is they would respond us to buy our products
+# but we thought they would not!
+
+
+# About the data
+# Household Income (Income; rounded to the nearest $1,000.00)
+# Gender (IsFemale = 1 if the person is female, 0 otherwise)
+# Marital Status (IsMarried = 1 if married, 0 otherwise)
+# College Educated (HasCollege = 1 if has one or more years of college education, 0 otherwise)
+# Employed in a Profession (IsProfessional = 1 if employed in a profession, 0 otherwise)
+# Retired (IsRetired = 1 if retired, 0 otherwise)
+# Not employed (Unemployed = 1 if not employed,  0 otherwise)
+# Length of Residency in Current City (ResLength; in years)
+# Dual Income if Married (Dual = 1 if dual income, 0 otherwise)
+# Children (Minors = 1 if children under 18 are in the household, 0 otherwise)
+# Home ownership (Own = 1 if own residence, 0 otherwise)
+# Resident type (House = 1 if residence is a single family house, 0 otherwise)
+# Race (White = 1 if race is white, 0 otherwise)
+# Language (English = 1 is the primary language in the household is English, 0 otherwise)
+# 
+# So how might MZines4You.com decide what magazines to market to 
+# each person; that is, what ads to put in each e-mail? 
+# One way would be to develop an equation 
+# (this is where multivariate logistic regression comes in) 
+# that predicts the probability that a customer will buy a
+# particular magazine based on the data that the company 
+# has about the customer. Such an equation would be developed 
+# for each magazine that the company sells.
+
 KidCreative <- read.csv("C:/Users/peimo/Desktop/MATH 156/Final_Project/Data/KidCreative.csv")
-
-cus_m<-glm(Buy~Income+Is.Female+
-             +Is.Married
-           +Has.College	
-           +Is.Professional	
-           +Is.Retired	
-           +Unemployed	
-           +Residence.Length	
-           +Dual.Income	
-           +Minors	
-           +Own	
-           +House	
-           +White	
-           +English	
-           +Prev.Child.Mag	
-           +Prev.Parent.Mag,data=KidCreative,family=binomial)
-summary(cus_m)
-
-ROC_curve(cus_m,KidCreative,KidCreative$Buy)
-
-# Call:
-#   glm(formula = Buy ~ Income + Is.Female + +Is.Married + Has.College + 
-#         Is.Professional + Is.Retired + Unemployed + Residence.Length + 
-#         Dual.Income + Minors + Own + House + White + English + Prev.Child.Mag + 
-#         Prev.Parent.Mag, family = binomial, data = KidCreative)
-# 
-# Deviance Residuals: 
-#   Min        1Q    Median        3Q       Max  
-# -2.36655  -0.08416  -0.00955  -0.00149   2.49038  
-# 
-# Coefficients:
-#   Estimate Std. Error z value Pr(>|z|)    
-# (Intercept)      -1.791e+01  2.223e+00  -8.058 7.74e-16 ***
-#   Income            2.016e-04  2.359e-05   8.545  < 2e-16 ***
-#   Is.Female         1.646e+00  4.651e-01   3.539 0.000401 ***
-#   Is.Married        5.662e-01  5.864e-01   0.966 0.334272    
-# Has.College      -2.794e-01  4.437e-01  -0.630 0.528962    
-# Is.Professional   2.253e-01  4.650e-01   0.485 0.627981    
-# Is.Retired       -1.159e+00  9.323e-01  -1.243 0.214015    
-# Unemployed        9.886e-01  4.690e+00   0.211 0.833030    
-# Residence.Length  2.468e-02  1.380e-02   1.788 0.073798 .  
-# Dual.Income       4.518e-01  5.215e-01   0.866 0.386279    
-# Minors            1.133e+00  4.635e-01   2.444 0.014521 *  
-#   Own               1.056e+00  5.594e-01   1.888 0.058976 .  
-# House            -9.265e-01  6.218e-01  -1.490 0.136238    
-# White             1.864e+00  5.454e-01   3.417 0.000632 ***
-#   English           1.530e+00  8.407e-01   1.821 0.068678 .  
-# Prev.Child.Mag    1.557e+00  7.119e-01   2.188 0.028704 *  
-#   Prev.Parent.Mag   4.777e-01  6.240e-01   0.766 0.443900    
-# ---
-#   Signif. codes:  0 ?**?0.001 ?*?0.01 ??0.05 ??0.1 ??1
-# 
-# (Dispersion parameter for binomial family taken to be 1)
-# 
-# Null deviance: 646.05  on 672  degrees of freedom
-# Residual deviance: 182.33  on 656  degrees of freedom
-# AIC: 216.33
-# 
-# Number of Fisher Scoring iterations: 9
-
-
-
-
-
-
-# SVM KNN Cross validation
-
-
-
-
-rmse <- function(error)
-{
-  sqrt(mean(error^2))
-}
-
-error <- cus_m$residuals  # same as data$Y - predictedY
-predictionRMSE <- rmse(error)   # 5.703778
-predictionRMSE
-# 2.116948
-
-
-install.packages("e1071")
-library(e1071)
-
-
-cus_m<-svm(Buy~Income+Is.Female+
-             +Is.Married
-           +Has.College  
-           +Is.Professional	
-           +Is.Retired	
-           +Unemployed	
-           +Residence.Length	
-           +Dual.Income	
-           +Minors	
-           +Own	
-           +House	
-           +White	
-           +English	
-           +Prev.Child.Mag	
-           +Prev.Parent.Mag,data=KidCreative,family=binomial)
-
-error <- cus_m$residuals  # same as data$Y - predictedY
-predictionRMSE <- rmse(error)   # 5.703778
-predictionRMSE
-# 0.2060878
-
-
-
-
-
 KidCreative[,"Obs.No."]<- NULL
 
 
-install.packages("caret")
-install.packages("ordinal")
-# Use the caret R package to split the data into a training set with 80% of data 
-# and a test set with the remaing 20%. Then use glm() to build a model. What is the accuracy?
-
-## put your code here
-
-library(caret)
-library(ordinal)
-
-inTrain <- createDataPartition(y = KidCreative$Buy, p = 0.8)
-
-KidCreative<-data.frame(KidCreative)
-
-train_set <- slice(KidCreative, inTrain$Resample1)
-test_set <- slice(KidCreative, -inTrain$Resample1)
-
-fit <- glm(Buy~., data=train_set, family="binomial")
-pred <- predict(fit, newdata = test_set, type = "response")
-tab <- table(pred = round(pred), truth = test_set$Buy)
-confusionMatrix(tab)
-
-
-
-# We see that obtain a very high accuracy, but note that this is a random variable 
-# due to the random split of our data. 
-# Try 10 new random splits and report on how much our accuracy changes.
-
-acc <- sapply(1:10,function(i){
-  inTrain <- createDataPartition(KidCreative$Buy,
-                                 p=0.8)
-  train_set <- slice(KidCreative, inTrain$Resample1)
-  test_set <- slice(KidCreative, -inTrain$Resample1)
-  fit <- glm(Buy~., data=train_set, family="binomial")
-  pred <- predict(fit, newdata = test_set, type = "response")
-  tab <- table(pred = round(pred), 
-               truth = test_set$Buy)
-  confusionMatrix(tab)$overall["Accuracy"]
-})
-mean(acc)
-# 0.9149254
-sd(acc)
-# 0.0228531
-
-
-# Compare your glm() model to a knn(). Use the train() function to run 10 
-# cross validations leaving out 20% of the data. Plot your results.
-
-
-control <- trainControl(method='cv', number=10, p=.8)
-dat <- mutate(KidCreative, y=factor(KidCreative$Buy))
-res <- train(Buy~ .,
-             data = trainControl,
-             method = "knn",
-             trControl = control,
-             tuneLength = 1, # How fine a mesh to go on grid
-             tuneGrid=data.frame(k=seq(1,25,2)),
-             metric="Accuracy")
-res$results %>% 
-  ggplot(aes(k, Accuracy, ymin= Accuracy - AccuracySD, 
-             ymax = Accuracy + AccuracySD)) +
-  geom_point() + geom_errorbar()
-
-
-
-install.packages("ROCR")
-library(ROCR)
-
-
-# Orignial roc curve
-prob <- predict(fit, newdata=test_set, type="response")
-pred <- prediction(prob, test_set$Buy)
-perf <- performance(pred, measure = "tpr", x.measure = "fpr")
-auc <- performance(pred, measure = "auc")
-auc <- auc@y.values[[1]]
-
-roc.data <- data.frame(fpr=unlist(perf@x.values),
-                       tpr=unlist(perf@y.values),
-                       model="GLM")
-
-ggplot(roc.data, aes(x=fpr, ymin=0, ymax=tpr)) +
-  geom_ribbon(alpha=0.2) +
-  geom_line(aes(y=tpr)) +
-  ggtitle(paste0("ROC Curve w/ AUC=", auc))
-
-
+# a receiver operating characteristic (ROC), or ROC curve, 
+# is a graphical plot that illustrates the performance of 
+# a binary classifier system as its discrimination threshold is varied. 
+# The curve is created by plotting the true positive rate (TPR) 
+# against the false positive rate (FPR) at various threshold settings. 
+# The true-positive rate is also known as sensitivity, or recall 
+# in machine learning.
 
 ROC_curve <- function(model,t_set,resp)
 {
@@ -747,9 +671,137 @@ ROC_curve <- function(model,t_set,resp)
     ggtitle(paste0("ROC Curve w/ AUC=", auc))
 }
 
+
+rmse <- function(error)
+{
+  sqrt(mean(error^2))
+}
+
+# logistic regression 
+cus_m<-glm(Buy~.,data=KidCreative,family=binomial)
+summary(cus_m)
+
+error <- cus_m$residuals  # same as data$Y - predictedY
+predictionRMSE <- rmse(error)   # 5.703778
+predictionRMSE
+# 2.116948
+
+ROC_curve(cus_m,KidCreative,KidCreative$Buy)
+
+# SVM KNN Cross validation
+
+# support vector machine
+cus_m<-svm(Buy~.,data=KidCreative,family=binomial)
+
+ROC_curve(cus_m,KidCreative,KidCreative$Buy)
+
+error <- cus_m$residuals  # same as data$Y - predictedY
+predictionRMSE <- rmse(error)   # 5.703778
+predictionRMSE
+# 0.2060878
+
+
+
+
+# Use the caret R package to split the data into a training set with 80% of data 
+# and a test set with the remaing 20%. Then use glm() to build a model. What is the accuracy?
+
+
+inTrain <- createDataPartition(y = KidCreative$Buy, p = 0.8)
+train_set <- slice(KidCreative, inTrain$Resample1)
+test_set <- slice(KidCreative, -inTrain$Resample1)
+
+fit <- glm(Buy~., data=train_set, family="binomial")
+pred <- predict(fit, newdata = test_set, type = "response")
+tab <- table(pred = round(pred), truth = test_set$Buy)
+confusionMatrix(tab)
+# pred   0   1
+# 0 105   5
+# 1   3  21
+
+ROC_curve(fit,test_set,test_set$Buy)
+
+error <- fit$residuals  # same as data$Y - predictedY
+predictionRMSE <- rmse(error)   # 5.703778
+predictionRMSE
+# 1.842402
+
+
+# We see that obtain a very high accuracy, but note that this is a random variable due to the random split of our data. 
+# Try 10 new random splits and report on how much our accuracy changes.
+
+acc <- sapply(1:10,function(i){
+  inTrain <- createDataPartition(KidCreative$Buy,
+                                 p=0.8)
+  train_set <- slice(KidCreative, inTrain$Resample1)
+  test_set <- slice(KidCreative, -inTrain$Resample1)
+  fit <- glm(Buy~., data=train_set, family="binomial")
+  pred <- predict(fit, newdata = test_set, type = "response")
+  tab <- table(pred = round(pred), 
+               truth = test_set$Buy)
+  confusionMatrix(tab)$overall["Accuracy"]
+})
+mean(acc)
+# 0.9149254
+sd(acc)
+# 0.0228531
+
+#SVM cross validation
+inTrain <- createDataPartition(y = KidCreative$Buy, p = 0.8)
+train_set <- slice(KidCreative, inTrain$Resample1)
+test_set <- slice(KidCreative, -inTrain$Resample1)
+
+fit <- svm(Buy~., data=train_set, family="binomial")
+pred <- predict(fit, newdata = test_set, type = "response")
+tab <- table(pred = round(pred), truth = test_set$Buy)
+confusionMatrix(tab)
+#      truth
+# pred   0   1
+# 0 107  11
+# 1   3  13
+
 ROC_curve(fit,test_set,test_set$Buy)
 
 
+error <- fit$residuals  # same as data$Y - predictedY
+predictionRMSE <- rmse(error)   # 5.703778
+predictionRMSE
+# 0.2162786
 
 
-# (3) bayesian statistics
+# so compared with logistic model
+# even SVM has lower rmse 
+# but it generates more false negative
+# it is the worst situation that
+# if you send customer email, they would buy it but you did not!
+# so logistic regressin is better!
+
+
+# One more Optoin
+#KNN
+
+# Compare your glm() model to a knn(). Use the train() function to 
+# run 10 cross validations leaving out 20% of the data. Plot your results.
+
+control <- trainControl(method='cv', number=10, p=.8)
+dat <- mutate(KidCreative, y=factor(Buy))
+res <- train(y ~ .,
+             data = dat,
+             method = "knn",
+             trControl = control,
+             tuneLength = 1, # How fine a mesh to go on grid
+             tuneGrid=data.frame(k=seq(1,25,2)),
+             metric="Accuracy")
+res$results %>% 
+  ggplot(aes(k, Accuracy, ymin= Accuracy - AccuracySD, 
+             ymax = Accuracy + AccuracySD)) +
+  geom_point() + geom_errorbar()
+
+
+
+
+
+
+
+
+
