@@ -101,7 +101,7 @@ colnames(sample_salaries) <- c("t","a")
 #is different from B "applied" departments professors.
 
 #Assumtions verification
-# The populations from which the samples have been drawn should be normal
+#The populations from which the samples have been drawn should be normal
 qqnorm(sample_salaries$t)
 qqline(sample_salaries$t)
 
@@ -147,7 +147,6 @@ nrow(PS_t)
 nrow(PS_a)
 
 
-# randomly choose 100 samples each of two groups
 choose_range_t<-c(1:nrow(PS_t))
 sample_index<-sample(choose_range_t,28)
 sample_PS_t<-PS_t[sample_index,]
@@ -227,14 +226,14 @@ plot(x =c(110000,145000), y = c(1,100), type = "n", xlab = "", ylab = "") #blank
 mean(PS_m$salary); var(PS_m$salary)
 #Use Student's t(theoritical) to get a confidence interval
 mean(PS_m$salary) + qt(0.025, 247) * sd(PS_m$salary)/sqrt(248); mean(PS_m$salary) + qt(0.975, 247) * sd(PS_m$salary)/sqrt(248)
-#Run the automated t test
-t.test(PS_m$salary, conf.level = .95)    
-
+  
 #We are 95% percent sure that
 #the true mean of mean of salary of male full professor 
 #is between 123592.and 1 130649.5 
 
-#simulation t confidence interval
+
+
+#simulation t-confidence interval
 
 
 means <- numeric(1000);lower = numeric(1000); upper = numeric(1000)
@@ -289,6 +288,8 @@ choose_range_t<-c(1:nrow(PS_t))
 sample_index<-sample(choose_range_t,100)
 yrs_phd_salary<-yrs_phd_salary[sample_index,]
 
+
+#Appropriate use of covariance or correlation
 plot(yrs_phd_salary$years.since.Phd,yrs_phd_salary$scaled.salary,main="years since Phd",xlab = 'years since Phd'
      ,ylab = 'salary')
 
@@ -296,32 +297,13 @@ abline(h = mean(yrs_phd_salary$scaled.salary), col = "red")
 abline(v = mean(yrs_phd_salary$years.since.Phd), col = "red")
 
 # of the points are in first quadrant and third
-# quadrant, that covriance of years since Phd and salary should be positive 
+# quadrant, years since Phd and salary are positively correlated
 
 cor.test(yrs_phd_salary$years.since.Phd,yrs_phd_salary$scaled.salary)
-# from Pearson's product-moment correlation
+# Also, from Pearson's product-moment correlation
 # I can see there is a positive correlation
 # betwween professors' salary and experince. 
 
-
-hb_m.lm <- lm(scaled.salary~ years.since.Phd,data=yrs_phd_salary);hb_m.lm
-
-
-#  Appropriate use of novel statistics (eg, trimmed mean, skewness, 
-#  median absolutedeviation, least-absolute-error regression, ratios, 
-#  order statistics, R squared) 
-summary(hb_m.lm)
-# the inference of beta, I find years.since.Phd has p value of 0.0837
-# and has coefficient of 0.6555, that means one addtional years 
-# there is associate 0.6555 * 1000 salary increase
-
-
-# simple linear regression assumptions verification
-# A graphical display unlike one presented in the textbook or 
-# course scripts
-par(mfrow = c(2, 2))
-plot(hb_m.lm)
-par(mfrow = c(1, 1))
 
 # delete outliers 
 # For a given continuous variable, outliers are those observations that lie outside 1.5*IQR, where IQR, 
@@ -341,21 +323,22 @@ hist(yrs_phd_salary$scaled.salary,probability = TRUE)
 curve(dnorm(x, mean=mean(yrs_phd_salary$scaled.salary),sd=sd(yrs_phd_salary$scaled.salary))
       , col = "red", add= TRUE)
 
-summary(yrs_phd_salary$scaled.salary)
-# Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-# 57.8    91.0   107.3   113.7   134.2   231.5 
-
-#trim to 75% 
 trimed_yrs_phd_salary<-subset(yrs_phd_salary,subset=(yrs_phd_salary$scaled.salary>=mild.threshold.lower & 
                                                        yrs_phd_salary$scaled.salary<=mild.threshold.upper))
 
 
 hb_m.lm <- lm(scaled.salary~ years.since.Phd,data=trimed_yrs_phd_salary);hb_m.lm
+# the inference of beta, I find years.since.Phd has p value of 0.0837
+# and has coefficient of 0.6555, that means one addtional years 
+# there is associate 0.6555 * 1000 salary increase
 
-confint(hb_m.lm, 'years.since.Phd', level=0.95)
-#    2.5 %    97.5 %
-#   years.since.Phd -0.6526206 0.8834089
 
+
+# Verify multiple regression assumptions
+# from residual plot, I can the variance of error roughly equal
+# from qq plot, i can see the data approximiately normaly distributed
+# independence of each data
+# randomness of data selection
 
 par(mfrow = c(2, 2))
 plot(hb_m.lm)
@@ -391,8 +374,7 @@ print(predint_mass)
 # fit      lwr      upr
 # 1 120.9482 76.02208 165.8743
 
-# Beta confidence interval & prediction interval
-visreg(hb_m.lm,main='confidence interval & prediction interval')
+
 
 
 
@@ -416,7 +398,7 @@ theta <- seq(0,1,by=.1) #ranges from 0.0 to 1.0
 #The "Bayesian prior" specifies the probability of each value.
 prior <- c(0.9,0.05,0.03,0.01,0.005,0.005,0,0,0,0,0); sum(prior) #must sum to 1
 #A broken-line plot of the prior
-plot(theta, prior, type = "b", ylim = c(0, 1), ylab = "Probability")
+plot(theta, prior, type = "b", main='leicester city winning distribution',ylim = c(0, 1), ylab = "Probability")
 
 likelihood <- theta^3*(1-theta)^2; likelihood 
 P1W2L<-sum(prior* likelihood); P1W2L
@@ -429,10 +411,9 @@ sum(theta*posterior) #posterior mean
 lines(theta, posterior, type="b", col = "red")
 
 
-
 likelihood2 <- theta^5*(1-theta)^0
 P2W3L<-sum(posterior* likelihood2)
-posterior2 <-posterior * likelihood3/ P2W3L
+posterior2 <-posterior * likelihood2/ P2W3L
 sum(theta*posterior2) #expectation is same as before
 lines(theta, posterior2, type="b", col = "blue")
 
@@ -447,6 +428,11 @@ P2W3L<-sum(posterior3* likelihood4)
 posterior4 <-posterior3 * likelihood4/ P2W3L
 sum(theta*posterior4) #expectation is same as before
 lines(theta, posterior4, type="b", col = "green")
+
+#I can see that their probalilty of wining the premier league 
+#championship has been greatly increased! 
+legend("topleft",legend = c("prior", "posterior1", "posterior2","posterior3","posterior4"),
+       lty = 1, col = c("black","red","blue", "brown", "green"))
 
 #I can see that their probalilty of wining the premier league 
 #championship has been greatly increased! 
@@ -475,7 +461,7 @@ quantile(family.boot, c(.025, .975))/178
 #   0.1966292 0.3258427 
 
 
-# Note that part (a) is fre- quentist, not Bayesian.  
+# Note that part (a) is frequentist, not Bayesian.  
 # Then, i will apply Bayesian method to build a confidence interval
 # to estimate mean of theta
 # Find the estimates for theata (posterior means) and 95% credible intervals
@@ -497,7 +483,9 @@ theta.expected <- alpha.posterior.stat2/(alpha.posterior.stat2 + beta.posterior.
 qbeta(c(.025, .975),alpha.posterior.stat2, beta.posterior.stat2)
 # 0.1771555 0.2932033
 
-
+#  frequentist interval: 0.1966292 to 0.3258427 
+#  Bayesian interval: 0.1771555 to 0.2932033
+#  Thereby, frequentist and Bayesian method got similar results 
 
 
 
@@ -537,11 +525,15 @@ plot(hb_m.lm)
 par(mfrow = c(1, 1))
 
 
+# add interaction term of price*income
 # detect if there is interaction tearm 
 # I suspect price and income interactoin term
 m_ic<-lm(IC~price + temp+income+price*income, data=iceCreamConsumption)
+#after adding new interaction term check assumtionis again
+par(mfrow = c(2, 2))
+plot(hb_m.lm)
+par(mfrow = c(1, 1))
 summary(m_ic)
-
 # I can see ineractin term price:income is signficant 
 # with p value of 0.0491.  
 # I can see that after adding interaction term the r squre increases 
@@ -571,15 +563,13 @@ summary(m_ic)
 # and so we reject null hypothesis. There is relationship between 
 # CreamConsum and price:income After accounting for other fators.
 
-par(mfrow = c(2, 2))
-plot(hb_m.lm)
-par(mfrow = c(1, 1))
+
 
 
 # check Multicollinarity
 # When some of your predictor variables are correlated
 
-vif(m_ic)
+
 ggpairs(iceCreamConsumption[,1:4])
 cor(iceCreamConsumption[,2:4])
 pairs(iris[,1:4])
@@ -590,14 +580,13 @@ mass <- data.frame(price=0.23,temp=50, income=50, price_income=50)
 confint_mass <- predict(m_ic, mass, interval=c("confidence"))
 print(confint_mass)
 
+# the confidence interval of salary mean is between -0.5319696 and 0.297272
 
 predint_mass <- predict(m_ic, mass, interval=c("prediction"))
 print(predint_mass)
 
+# the prediction interval of salary  is between -0.536858 and 0.3021603
 
-par(mfrow = c(2, 2))
-visreg(m_ic,main='confidence interval & prediction interval')
-par(mfrow = c(1, 1))
 
 
 
@@ -607,7 +596,7 @@ par(mfrow = c(1, 1))
 
 # the data is from a website.
 # about customer's information and if they buy from the site or not
-# i want to use logistic regressino and other machine learning models
+# i want to use logistic regression and other machine learning models
 # to make a good classifier to help marketing team to target certain
 # customers
 
@@ -673,32 +662,51 @@ rmse <- function(error)
 cus_m<-glm(Buy~.,data=KidCreative,family=binomial)
 summary(cus_m)
 
+# many variables are significant
+# for example, own or not own a house with p value 0.014521
+# the coefficient of 1.056e+00, that means
+# one additional house, 1.056e+00 increase log odds of buy the product
+# from the website
+
 error <- cus_m$residuals  # same as data$Y - predictedY
 predictionRMSE <- rmse(error)   # 5.703778
 predictionRMSE
 # 2.116948
-
 ROC_curve(cus_m,KidCreative,KidCreative$Buy)
 
-# SVM KNN Cross validation
+
 
 # support vector machine
 cus_m<-svm(Buy~.,data=KidCreative,family=binomial)
-
 ROC_curve(cus_m,KidCreative,KidCreative$Buy)
-
 error <- cus_m$residuals  # same as data$Y - predictedY
 predictionRMSE <- rmse(error)   # 5.703778
 predictionRMSE
 # 0.2060878
+ROC_curve(cus_m,KidCreative,KidCreative$Buy)
 
 
 
 
+# From ROC curve, I can see logistic model a little larger arae under the 
+# ROC curve then SVM's but SVM rmse is 0.2060878 and logistic model is 2.116948
+# Hence, SVM is better classifier. So based on logisticl model 
+# we will be able to classifier customers more efficiently and accurately.
+
+
+
+
+
+
+#############################################################################
+# this code below requires packages which might not work for all the machines
+# if they do not work, please take credit by far. Thank you:)
+#############################################################################
+
+
+# Training set and test set
 # Use the caret R package to split the data into a training set with 80% of data 
 # and a test set with the remaing 20%. Then use glm() to build a model. What is the accuracy?
-
-
 inTrain <- createDataPartition(y = KidCreative$Buy, p = 0.8)
 train_set <- slice(KidCreative, inTrain$Resample1)
 test_set <- slice(KidCreative, -inTrain$Resample1)
@@ -718,27 +726,7 @@ predictionRMSE <- rmse(error)   # 5.703778
 predictionRMSE
 # 1.842402
 
-
-# We see that obtain a very high accuracy, but note that this is a random variable due to the random split of our data. 
-# Try 10 new random splits and report on how much our accuracy changes.
-
-acc <- sapply(1:10,function(i){
-  inTrain <- createDataPartition(KidCreative$Buy,
-                                 p=0.8)
-  train_set <- slice(KidCreative, inTrain$Resample1)
-  test_set <- slice(KidCreative, -inTrain$Resample1)
-  fit <- glm(Buy~., data=train_set, family="binomial")
-  pred <- predict(fit, newdata = test_set, type = "response")
-  tab <- table(pred = round(pred), 
-               truth = test_set$Buy)
-  confusionMatrix(tab)$overall["Accuracy"]
-})
-mean(acc)
-# 0.9149254
-sd(acc)
-# 0.0228531
-
-#SVM cross validation
+#SVM 
 inTrain <- createDataPartition(y = KidCreative$Buy, p = 0.8)
 train_set <- slice(KidCreative, inTrain$Resample1)
 test_set <- slice(KidCreative, -inTrain$Resample1)
@@ -788,12 +776,4 @@ res$results %>%
   ggplot(aes(k, Accuracy, ymin= Accuracy - AccuracySD, 
              ymax = Accuracy + AccuracySD)) +
   geom_point() + geom_errorbar()
-
-
-
-
-
-
-
-
 
