@@ -286,7 +286,7 @@ yrs_phd_salary<-data.frame(yrs_since_phd,scale_salary)
 colnames(yrs_phd_salary) <- c("years.since.Phd","scaled.salary")  
 
 choose_range_t<-c(1:nrow(PS_t))
-sample_index<-sample(choose_range_t,50)
+sample_index<-sample(choose_range_t,100)
 yrs_phd_salary<-yrs_phd_salary[sample_index,]
 
 plot(yrs_phd_salary$years.since.Phd,yrs_phd_salary$scaled.salary,main="years since Phd",xlab = 'years since Phd'
@@ -631,15 +631,7 @@ par(mfrow = c(1, 1))
 # Resident type (House = 1 if residence is a single family house, 0 otherwise)
 # Race (White = 1 if race is white, 0 otherwise)
 # Language (English = 1 is the primary language in the household is English, 0 otherwise)
-# 
-# So how might MZines4You.com decide what magazines to market to 
-# each person; that is, what ads to put in each e-mail? 
-# One way would be to develop an equation 
-# (this is where multivariate logistic regression comes in) 
-# that predicts the probability that a customer will buy a
-# particular magazine based on the data that the company 
-# has about the customer. Such an equation would be developed 
-# for each magazine that the company sells.
+
 
 KidCreative <- read.csv("C:/Users/peimo/Desktop/MATH 156/Final_Project/Data/KidCreative.csv")
 KidCreative[,"Obs.No."]<- NULL

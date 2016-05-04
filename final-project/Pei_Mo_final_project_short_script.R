@@ -37,34 +37,8 @@ library(Lock5Data)
 # The data were collected as part of the on-going 
 # effort of the college's administration to monitor 
 # salary differences between male and female faculty members.
-# 
-# 
-# Data Format
-# 
-# A data frame with 397 observations on the following 6 variables.
-# 
-# rank
-# a factor with levels AssocProf AsstProf Prof
-# 
-# discipline (categorical)
-# a factor with levels A ("theoretical" departments) 
-# or B ("applied" departments).
-# 
-# yrs.since.phd (numeric)
-# years since PhD.
-# 
-# yrs.service (numeric)
-# years of service.
-# 
-# sex (categorical)
-# a factor with levels Female Male
-# 
-# salary (numeric)
-# nine-month salary, in dollars.
-# 
-# References
-# Fox J. and Weisberg, S. (2011) An R Companion to Applied Regression, 
-# Second Edition Sage.
+
+
 
 
 Salaries <- read.csv("C:/Users/peimo/Desktop/MATH 156/Final_Project/Data/Salaries.csv")
@@ -79,7 +53,6 @@ PS_t<-subset(Salaries,select=salary,subset=(discipline=='A'&rank=='Prof'))
 PS_a<-subset(Salaries,select=salary,subset=(discipline=='B'&rank=='Prof'))
 
 nrow(PS_t)
-
 nrow(PS_a)
 
 
@@ -126,73 +99,6 @@ t.test(sample_salaries$t,sample_salaries$a,alt="greater")
 # so there is no significant evidence support there is a 
 # salaryy mean difference between  of theoretical professors
 # and "applied" departments professors
-
-
-
-
-# salaryy mean difference between  of male professors
-# and female professors
-
-#I am interested to test if female professors make similar amount of salary
-#as male professors do
-
-PS_t<-subset(Salaries,select=salary,
-             subset=(sex=='Male'&rank=='Prof')|(sex=='Male'&rank=='AssocProf'))
-
-PS_a<-subset(Salaries,select=salary,
-             subset=(sex=='Female'&rank=='Prof')|(sex=='Female'&rank=='AssocProf'))
-
-nrow(PS_t)
-
-nrow(PS_a)
-
-
-# randomly choose 100 samples each of two groups
-choose_range_t<-c(1:nrow(PS_t))
-sample_index<-sample(choose_range_t,28)
-sample_PS_t<-PS_t[sample_index,]
-
-
-sample_PS_a<-PS_a
-
-
-sample_salaries<-data.frame(sample_PS_t,sample_PS_a)
-colnames(sample_salaries) <- c("t","a")  
-
-
-
-#Two sample T-Test to test if mean of theoretical professors
-#is different from B "applied" departments professors.
-
-#Assumtions verification
-# Samples have to be randomly drawn independent of each other.
-# I assume the salary of different professors is independent of each other
-
-
-# The populations from which the samples have been drawn should be normal
-qqnorm(sample_salaries$t)
-qqline(sample_salaries$t)
-
-qqnorm(sample_salaries$a)
-qqline(sample_salaries$a)
-# The standard deviation of the populations should be equal 
-hist(sample_salaries$t, probability = TRUE)
-curve(dnorm(x, mean=mean(sample_salaries$t),sd=sd(sample_salaries$t))
-      , col = "red", add= TRUE)
-hist(sample_salaries$a, probability = TRUE)
-curve(dnorm(x, mean=mean(sample_salaries$a),sd=sd(sample_salaries$a))
-      , col = "red", add= TRUE)
-
-
-t.test(sample_salaries$t,sample_salaries$a,alt="greater")
-
-
-
-#Conclusion: there is significant (p-value = 0.01304)evidence support there is a 
-# salaryy mean difference between  of male professors
-# and female professors
-
-
 
 
 #(b) T confidence interval
@@ -286,10 +192,10 @@ yrs_phd_salary<-data.frame(yrs_since_phd,scale_salary)
 colnames(yrs_phd_salary) <- c("years.since.Phd","scaled.salary")  
 
 choose_range_t<-c(1:nrow(PS_t))
-sample_index<-sample(choose_range_t,50)
+sample_index<-sample(choose_range_t,100)
 yrs_phd_salary<-yrs_phd_salary[sample_index,]
 
-plot(yrs_phd_salary$years.since.Phd,yrs_phd_salary$scaled.salary,main="years since Phd",xlab = 'years since Phd'
+plot(yrs_phd_salary$years.since.Phd,yrs_phd_salary$scaled.salary,main="Professors' salary",xlab = 'years since Phd'
      ,ylab = 'salary')
 
 abline(h = mean(yrs_phd_salary$scaled.salary), col = "red")
@@ -362,8 +268,11 @@ plot(hb_m.lm)
 par(mfrow = c(1, 1))
 
 summary(hb_m.lm)
-
+# the inference of beta, I find years.since.Phd has p value of 0.0615
+# and has coefficient of 0.5443, that means one addtional year
+# there is associate 0.5443 * 1000 salary increase
 # A scatter plot with regression line
+
 plot(yrs_phd_salary$years.since.Phd,yrs_phd_salary$scaled.salary
      ,main="years since Phd"
      ,xlab = 'years since Phd'
@@ -416,7 +325,7 @@ theta <- seq(0,1,by=.1) #ranges from 0.0 to 1.0
 #The "Bayesian prior" specifies the probability of each value.
 prior <- c(0.9,0.05,0.03,0.01,0.005,0.005,0,0,0,0,0); sum(prior) #must sum to 1
 #A broken-line plot of the prior
-plot(theta, prior, type = "b", ylim = c(0, 1), ylab = "Probability")
+plot(theta, prior, type = "b", main='leicester city winning distribution',ylim = c(0, 1), ylab = "Probability")
 
 likelihood <- theta^3*(1-theta)^2; likelihood 
 P1W2L<-sum(prior* likelihood); P1W2L
@@ -429,10 +338,9 @@ sum(theta*posterior) #posterior mean
 lines(theta, posterior, type="b", col = "red")
 
 
-
 likelihood2 <- theta^5*(1-theta)^0
 P2W3L<-sum(posterior* likelihood2)
-posterior2 <-posterior * likelihood3/ P2W3L
+posterior2 <-posterior * likelihood2/ P2W3L
 sum(theta*posterior2) #expectation is same as before
 lines(theta, posterior2, type="b", col = "blue")
 
@@ -450,52 +358,9 @@ lines(theta, posterior4, type="b", col = "green")
 
 #I can see that their probalilty of wining the premier league 
 #championship has been greatly increased! 
+legend("topleft",legend = c("prior", "posterior1", "posterior2","posterior3","posterior4"),
+       lty = 1, col = c("black","red","blue", "brown", "green"))
 
-
-# (b)
-# Comparison of analysis by Bayesian and frequentist approaches
-# Appropriate use of bootstrap techniques
-
-#  Jobs by designated education level of occupations, May 2013
-#  reference(http://www.bls.gov/careeroutlook/2014/article/education-level-and-jobs.htm) 
-#  46 of the 200 people who have bachelor degree or above 
-
-
-# bootstrap confidence interval
-graduate <-c(rep(0,154),rep(1,46)) 
-N<-10^4; family.boot <- numeric(N)
-for (i in 1:N) {
-  fam.sample <- sample(graduate, replace = TRUE)
-  family.boot[i] <- sum(fam.sample)
-}
-hist(family.boot, breaks = "FD", main= "Bootstrap distribution")
-#Extract a 95% bootstrap percentile confidence interval - proportion who responded yes
-quantile(family.boot, c(.025, .975))/178
-# 2.5%     97.5% 
-#   0.1966292 0.3258427 
-
-
-# Note that part (a) is fre- quentist, not Bayesian.  
-# Then, i will apply Bayesian method to build a confidence interval
-# to estimate mean of theta
-# Find the estimates for theata (posterior means) and 95% credible intervals
-# "noninformative" prior 
-alpha.posterior.stat1 <- (46)
-beta.posterior.stat1 <- (200-46)
-# Expected theta - E[X] = alpha/(alpha + Beta)
-theta.expected <- alpha.posterior.stat1/(alpha.posterior.stat1 + beta.posterior.stat1); theta.expected
-#95% credible intervals
-qbeta(c(.025, .975),alpha.posterior.stat1, beta.posterior.stat1)
-# 0.1744818 0.2906311
-
-#Flat prior 
-alpha.posterior.stat2 <- (1+46)
-beta.posterior.stat2 <- (1+200-46)
-# Expected theta - E[X] = alpha/(alpha + Beta)
-theta.expected <- alpha.posterior.stat2/(alpha.posterior.stat2 + beta.posterior.stat2); theta.expected
-#95% credible intervals
-qbeta(c(.025, .975),alpha.posterior.stat2, beta.posterior.stat2)
-# 0.1771555 0.2932033
 
 
 
@@ -616,30 +481,6 @@ par(mfrow = c(1, 1))
 # but we thought they would not!
 
 
-# About the data
-# Household Income (Income; rounded to the nearest $1,000.00)
-# Gender (IsFemale = 1 if the person is female, 0 otherwise)
-# Marital Status (IsMarried = 1 if married, 0 otherwise)
-# College Educated (HasCollege = 1 if has one or more years of college education, 0 otherwise)
-# Employed in a Profession (IsProfessional = 1 if employed in a profession, 0 otherwise)
-# Retired (IsRetired = 1 if retired, 0 otherwise)
-# Not employed (Unemployed = 1 if not employed,  0 otherwise)
-# Length of Residency in Current City (ResLength; in years)
-# Dual Income if Married (Dual = 1 if dual income, 0 otherwise)
-# Children (Minors = 1 if children under 18 are in the household, 0 otherwise)
-# Home ownership (Own = 1 if own residence, 0 otherwise)
-# Resident type (House = 1 if residence is a single family house, 0 otherwise)
-# Race (White = 1 if race is white, 0 otherwise)
-# Language (English = 1 is the primary language in the household is English, 0 otherwise)
-# 
-# So how might MZines4You.com decide what magazines to market to 
-# each person; that is, what ads to put in each e-mail? 
-# One way would be to develop an equation 
-# (this is where multivariate logistic regression comes in) 
-# that predicts the probability that a customer will buy a
-# particular magazine based on the data that the company 
-# has about the customer. Such an equation would be developed 
-# for each magazine that the company sells.
 
 KidCreative <- read.csv("C:/Users/peimo/Desktop/MATH 156/Final_Project/Data/KidCreative.csv")
 KidCreative[,"Obs.No."]<- NULL
@@ -653,7 +494,7 @@ KidCreative[,"Obs.No."]<- NULL
 # The true-positive rate is also known as sensitivity, or recall 
 # in machine learning.
 
-ROC_curve <- function(model,t_set,resp)
+ROC_curve <- function(model,t_set,resp,model_name)
 {
   prob <- predict(model, newdata=t_set, type="response")
   pred <- prediction(prob, resp)
@@ -668,7 +509,7 @@ ROC_curve <- function(model,t_set,resp)
   ggplot(roc.data, aes(x=fpr, ymin=0, ymax=tpr)) +
     geom_ribbon(alpha=0.2) +
     geom_line(aes(y=tpr)) +
-    ggtitle(paste0("ROC Curve w/ AUC=", auc))
+    ggtitle(paste0(model_name," ROC Curve w/ AUC=", auc))
 }
 
 
@@ -686,26 +527,15 @@ predictionRMSE <- rmse(error)   # 5.703778
 predictionRMSE
 # 2.116948
 
-ROC_curve(cus_m,KidCreative,KidCreative$Buy)
-
-# SVM KNN Cross validation
-
-# support vector machine
-cus_m<-svm(Buy~.,data=KidCreative,family=binomial)
-
-ROC_curve(cus_m,KidCreative,KidCreative$Buy)
-
-error <- cus_m$residuals  # same as data$Y - predictedY
-predictionRMSE <- rmse(error)   # 5.703778
-predictionRMSE
-# 0.2060878
+ROC_curve(cus_m,KidCreative,KidCreative$Buy,"logistic reg")
 
 
 
 
 # Use the caret R package to split the data into a training set with 80% of data 
 # and a test set with the remaing 20%. Then use glm() to build a model. What is the accuracy?
-
+library(dplyr)
+library(caret)
 
 inTrain <- createDataPartition(y = KidCreative$Buy, p = 0.8)
 train_set <- slice(KidCreative, inTrain$Resample1)
@@ -719,7 +549,7 @@ confusionMatrix(tab)
 # 0 105   5
 # 1   3  21
 
-ROC_curve(fit,test_set,test_set$Buy)
+ROC_curve(fit,test_set,test_set$Buy,"logistic reg")
 
 error <- fit$residuals  # same as data$Y - predictedY
 predictionRMSE <- rmse(error)   # 5.703778
@@ -760,7 +590,7 @@ confusionMatrix(tab)
 # 0 107  11
 # 1   3  13
 
-ROC_curve(fit,test_set,test_set$Buy)
+ROC_curve(fit,test_set,test_set$Buy,"SVM ")
 
 
 error <- fit$residuals  # same as data$Y - predictedY
@@ -796,7 +626,6 @@ res$results %>%
   ggplot(aes(k, Accuracy, ymin= Accuracy - AccuracySD, 
              ymax = Accuracy + AccuracySD)) +
   geom_point() + geom_errorbar()
-
 
 
 
