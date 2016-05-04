@@ -1,0 +1,225 @@
+
+
+
+install.packages("knitr")
+install.packages("magrittr")
+library(knitr)
+library(magrittr)  
+
+
+library(knitr)
+opts_chunk$set(cache = TRUE, message = FALSE)
+
+options(dplyr.print_min = 5)
+
+
+temp_filename <- tempfile() ## creaate tempory file name
+temp_object <- 1:5 ## create an R object
+save(temp_object, file=temp_filename) ## save the r object to file
+rm(temp_object) ## remove object
+load(temp_filename) ## load object from file
+temp_object ## note that it's back
+
+
+x <- read.delim("https://github.com/datasciencelabs/data/raw/master/rawvotingdata13.tab")
+
+library(dplyr)
+votes <- tbl_df(x)
+votes
+rm(x)
+
+votes %>%
+  count(vote)
+
+votes <- votes %>%
+  filter(vote <= 3)
+
+install.packages("countrycode")
+library(countrycode)
+votes <- votes %>%
+  mutate(country = countrycode(ccode, "cown", "country.name"))
+
+
+library(tidyr)
+mapping <- c("United States"="USA",
+             "United Kingdom"="UK",
+             "Korea, Republic of"="South Korea",
+             "Lao People's Democratic Republic"="Laos",
+             "Yemen People's Republic"="South Yemen",
+             "Saint Vincent and the Grenadines"="Saint Vincent",
+             "Congo"="Congo Republic")
+votes <- votes %>% mutate(country = plyr::revalue(country, mapping)) %>%
+  separate(country, into = c("country", "extra"), sep=",", fill="right")
+
+install.packages("readr")
+library(readr)
+
+url <- "https://raw.githubusercontent.com/datasciencelabs/data/master/un-resolutions-descriptions.csv"
+descriptions <- read_csv(url, col_types = list(date = col_date("%m/%d/%y")))
+
+## from warning and looking at csv we see
+## line 1483 has an extra "
+## it's supposed to be a 0
+descriptions[1483,"ec"] <-0
+
+install.packages("lubridate")
+library(lubridate)
+y <- year(descriptions$date)
+year(descriptions$date) <- ifelse(y > 2030, y - 100, y)
+
+
+library(lubridate)
+library(ggplot2)
+descriptions %>%
+  count(year = year(date)) %>%
+  ggplot(aes(year, n)) +
+  geom_line() + xlab("Year") + ylab("Number of votes per year")
+
+## put your code here
+
+descriptions <- descriptions %>%
+  filter(year(date) != 2015)
+
+descriptions %>%
+  count(importantvote)
+
+votes <- votes %>%
+  inner_join(descriptions) %>%
+  select(-yes, -no, -abstain)
+
+
+library(tidyr)
+y <- votes %>% 
+  filter(country %in% c("USA", "Canada")) %>%
+  mutate(year = year(date)) %>%
+  select(rcid, year, importantvote, country, vote) %>%
+  spread(country, vote)
+
+y %>% 
+  group_by(importantvote) %>% 
+  summarize(mean(USA==Canada, na.rm=TRUE))
+
+
+install.packages("broom")
+library(broom)
+lm_fit <- y %>% group_by(year) %>% 
+  summarize(agreement=mean(USA==Canada, na.rm=TRUE)) %>% 
+  lm(agreement ~ year, dat=.)
+tidy(lm_fit)
+
+y %>% group_by(year) %>% 
+  summarize(agreement=mean(USA==Canada, na.rm=TRUE)) %>% 
+  ggplot(aes(year, agreement)) +
+  geom_point() +
+  geom_smooth(span=1/4) 
+
+
+countries <- c("USA", "Israel", "UK", "Mexico", "Cuba", "China")
+votes %>% mutate(year=year(date)) %>%
+  filter(country%in%countries)  %>%
+  select(rcid, year, country, vote, importantvote) %>%
+  spread(country, vote) %>%
+  group_by(year, importantvote) %>%
+  summarize(Israel=mean(USA==Israel, na.rm=TRUE),
+            UK=mean(USA==UK, na.rm=TRUE),
+            Mexico=mean(USA==Mexico, na.rm=TRUE),
+            Cuba=mean(USA==Cuba, na.rm=TRUE),
+            China=mean(USA==China, na.rm=TRUE))%>% 
+  gather(country, agreement, Israel:China) %>%
+  ggplot(aes(year, agreement, col=country))  +
+  geom_point()+ 
+  stat_smooth(span=1/4, method.args=list(degree=1), se=FALSE) +
+  facet_wrap(~ importantvote)
+
+
+
+
+
+
+countries <- votes %>% 
+  filter(importantvote==1) %>% 
+  group_by(country) %>% 
+  summarize(p=n()/368) %>% 
+  filter(p>=0.95) %>% 
+  .$country
+
+tmp <- votes %>% 
+  filter(country %in% countries & year(date) >= 1980 & importantvote == 1) %>%
+  select(rcid, country, vote) %>% 
+  spread(country, vote) 
+
+X <- as.matrix(tmp[,-1])
+rownames(X) <- tmp$rcid
+
+
+d <- dist(t(X))
+
+
+dist_from_us <- as.matrix(d)["USA",]
+install.packages("ggrepel")
+library(ggrepel)
+data.frame(country = names(dist_from_us), dist = dist_from_us) %>% 
+  filter(country!="USA") %>% 
+  arrange(dist) %>% 
+  ggplot(aes(x=seq_along(dist), y=dist, label=country)) + 
+  geom_point() + geom_text_repel()
+
+plot(hclust(d))
+heatmap(as.matrix(d))
+
+
+ountries <- c("USA", "Canada", "Israel", "UK", "Mexico", "Cuba", "China")
+
+dat <- votes %>% 
+  filter(importantvote == 1 & country %in% countries) %>%
+  select(rcid, country, vote) %>% 
+  spread(country, vote, fill = 2) %>% 
+  rename(y = USA) %>% 
+  filter(y != 2) %>% 
+  select(-rcid) %>%
+  mutate(y = ifelse(y == 1, 1, 0))
+
+
+library(caret)
+install.packages("e1071")
+library(e1071)
+inTrain <- createDataPartition(y = dat$y, p = 0.8)
+train_set <- slice(dat, inTrain$Resample1)
+test_set <- slice(dat, -inTrain$Resample1)
+
+fit <- glm(y~., data=train_set, family="binomial")
+pred <- predict(fit, newdata = test_set, type = "response")
+tab <- table(pred = round(pred), truth = test_set$y)
+confusionMatrix(tab)
+
+
+## put your code here
+
+acc <- sapply(1:10,function(i){
+  inTrain <- createDataPartition(y = dat$y,
+                                 p=0.8)
+  train_set <- slice(dat, inTrain$Resample1)
+  test_set <- slice(dat, -inTrain$Resample1)
+  fit <- glm(y~., data=train_set, family="binomial")
+  pred <- predict(fit, newdata = test_set, type = "response")
+  tab <- table(pred = round(pred), 
+               truth = test_set$y)
+  confusionMatrix(tab)$overall["Accuracy"]
+})
+mean(acc)
+sd(acc)
+
+
+control <- trainControl(method='cv', number=10, p=.8)
+dat <- mutate(dat, y=factor(y))
+res <- train(y ~ .,
+             data = dat,
+             method = "knn",
+             trControl = control,
+             tuneLength = 1, # How fine a mesh to go on grid
+             tuneGrid=data.frame(k=seq(1,25,2)),
+             metric="Accuracy")
+res$results %>% 
+  ggplot(aes(k, Accuracy, ymin= Accuracy - AccuracySD, 
+             ymax = Accuracy + AccuracySD)) +
+  geom_point() + geom_errorbar()
